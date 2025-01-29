@@ -6,7 +6,7 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 const Chatbot = ({ onClose }) => {
   const [message, setMessage] = useState('');
   const [messages, setMessages] = useState([
-    { text: "Hello! I'm July, your Favourite Assistant😊. How can I help you today?", sender: "bot" },
+    { text: "Hello! I'm Dina, your Favourite Assistant😊. How can I help you today?", sender: "bot" },
   ]);
   const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef(null);
@@ -26,7 +26,7 @@ const Chatbot = ({ onClose }) => {
 
     try {
       // API call to Gemini
-      const prompt = `You are July, a friendly and conversational chatbot assistant. You are assisting in giving information about everything bioinformation, like gene mutation, visualization.Respond in an understandable way and within a sentence. Avoid bold and italics as it affects the visual pleasure of the response. No need to introduce yourself unless you asked about yourself.Respond to the following message in a conversational manner as if you are talking to a person: ${userMessage}`;
+      const prompt = `You are Dina, a friendly and conversational chatbot assistant. You are assisting in giving information about everything bioinformation, like gene mutation, visualization.Respond in an understandable way and within a sentence. Avoid bold and italics as it affects the visual pleasure of the response. No need to introduce yourself unless you asked about yourself.Respond to the following message in a conversational manner as if you are talking to a person: ${userMessage}`;
       const result = await model.generateContent(prompt);
       const response = await result.response;
       const botReply = await response.text();
@@ -51,7 +51,7 @@ const Chatbot = ({ onClose }) => {
     <AnimatePresence>
       <motion.div
         initial={{ opacity: 0, scale: 0.95, x: 20 }}
-        animate={{ opacity: 1, scale: 1, x: 0 }}
+        animate={{ opacity: 10, scale: 1, x: 0 }}
         exit={{ opacity: 0, scale: 0.95, x: 20 }}
         className="fixed bottom-4 right-4 w-80 bg-navy-900 rounded-lg shadow-xl border border-indigo-500/20 overflow-hidden"
       >
@@ -65,9 +65,9 @@ const Chatbot = ({ onClose }) => {
           </button>
         </div>
 
-        <div className="h-96 p-4 overflow-y-auto scrollbar-thin scrollbar-thumb-black scrollbar-track-gray-900">
+        <div className="bg-gray-700 h-96 p-4 overflow-y-auto scrollbar-thin scrollbar-thumb-black scrollbar-track-gray-900">
           {messages.map((msg, index) => (
-            <div key={index} className={`mb-4 ${msg.sender === 'bot' ? 'bg-indigo-500/10' : 'bg-indigo-500/20'} rounded-lg p-3`}>
+            <div key={index} className={`mb-4 ${msg.sender === 'bot' ? 'bg-red-950' : 'bg-red-800'} rounded-lg p-3`}>
               <p className="text-white">{msg.text}</p>
             </div>
           ))}
@@ -79,7 +79,7 @@ const Chatbot = ({ onClose }) => {
           <div ref={messagesEndRef} />
         </div>
 
-        <form onSubmit={handleSubmit} className="p-4 border-t border-indigo-500/20">
+        <form onSubmit={handleSubmit} className="bg-gray-700 p-4 border-t border-indigo-500/20">
           <div className="flex space-x-2">
             <input
               type="text"

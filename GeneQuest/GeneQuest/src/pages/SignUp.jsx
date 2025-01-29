@@ -6,15 +6,29 @@ import { useAuth } from '../context/AuthContext';
 
 const SignUp = () => {
   const navigate = useNavigate();
-  const { login } = useAuth();
+  const { signup } = useAuth();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    login(); // Set authenticated state to true
-    navigate('/dashboard');
+    if (password.length < 6) {
+      setError('Password must be at least 6 characters long');
+      return;
+    }
+    try {
+      setError('');
+      setLoading(true);
+      await signup(email, password);
+      navigate('/dashboard');
+    } catch (error) {
+      setError('Failed to create an account. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -22,13 +36,19 @@ const SignUp = () => {
       <motion.div
         initial={{ y: 20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
-        className="bg-gray-900 p-8 rounded-xl border border-indigo-500/20 w-full max-w-md"
+        className="bg-navy-900 p-8 rounded-xl border border-indigo-500/20 w-full max-w-md"
       >
         <div className="text-center mb-8">
           <Dna className="h-12 w-12 text-indigo-400 mx-auto" />
           <h1 className="text-3xl font-bold text-white mt-4">Create Account</h1>
           <p className="text-gray-400 mt-2">Start your genetic exploration journey</p>
         </div>
+
+        {error && (
+          <div className="mb-4 p-3 bg-red-500/10 border border-red-500/20 rounded-lg">
+            <p className="text-red-500 text-sm">{error}</p>
+          </div>
+        )}
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
@@ -84,9 +104,10 @@ const SignUp = () => {
 
           <button
             type="submit"
-            className="w-full bg-indigo-600 text-white rounded-lg py-3 font-medium hover:bg-indigo-700 transition-colors"
+            disabled={loading}
+            className="w-full bg-indigo-600 text-white rounded-lg py-3 font-medium hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Create Account
+            {loading ? 'Creating Account...' : 'Create Account'}
           </button>
         </form>
 
@@ -101,4 +122,4 @@ const SignUp = () => {
   );
 };
 
-export default SignUp
+export default SignUp;
