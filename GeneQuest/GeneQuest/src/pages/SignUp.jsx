@@ -36,7 +36,7 @@ const SignUp = () => {
       <motion.div
         initial={{ y: 20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
-        className="bg-navy-900 p-8 rounded-xl border border-indigo-500/20 w-full max-w-md"
+        className="bg-gray-800 p-8 rounded-xl border border-indigo-500/20 w-full max-w-md"
       >
         <div className="text-center mb-8">
           <Dna className="h-12 w-12 text-indigo-400 mx-auto" />
