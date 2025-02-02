@@ -9,11 +9,21 @@ const Login = () => {
   const { login } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    login(); // Set authenticated state to true
-    navigate('/dashboard');
+    try {
+      setError('');
+      setLoading(true);
+      await login(email, password);
+      navigate('/dashboard');
+    } catch (error) {
+      setError('Failed to sign in. Please check your credentials.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -21,13 +31,19 @@ const Login = () => {
       <motion.div
         initial={{ y: 20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
-        className="bg-gray-900 p-8 rounded-xl border border-indigo-500/20 w-full max-w-md"
+        className="bg-gray-800 p-8 rounded-xl border border-indigo-500/20 w-full max-w-md"
       >
         <div className="text-center mb-8">
           <Dna className="h-12 w-12 text-indigo-400 mx-auto" />
           <h1 className="text-3xl font-bold text-white mt-4">Welcome back</h1>
           <p className="text-gray-400 mt-2">Sign in to continue your journey</p>
         </div>
+
+        {error && (
+          <div className="mb-4 p-3 bg-red-500/10 border border-red-500/20 rounded-lg">
+            <p className="text-red-500 text-sm">{error}</p>
+          </div>
+        )}
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
@@ -66,9 +82,10 @@ const Login = () => {
 
           <button
             type="submit"
-            className="w-full bg-indigo-600 text-white rounded-lg py-3 font-medium hover:bg-indigo-700 transition-colors"
+            disabled={loading}
+            className="w-full bg-indigo-600 text-white rounded-lg py-3 font-medium hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Sign In
+            {loading ? 'Signing in...' : 'Sign In'}
           </button>
         </form>
 

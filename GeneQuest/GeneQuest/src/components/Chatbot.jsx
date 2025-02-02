@@ -1,17 +1,18 @@
-import React, { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { X, Send } from "lucide-react";
+import React, { useState, useEffect, useRef } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { X, Send, MessageCircleMore } from 'lucide-react';
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
 const Chatbot = ({ onClose }) => {
-  const [message, setMessage] = useState("");
+  const [message, setMessage] = useState('');
   const [messages, setMessages] = useState([
-    { text: "Hello! I'm your GeneQuest assistant. How can I help you today?", sender: "bot" },
+    { text: "Hello! I'm Dina, your Favourite Assistant😊. How can I help you today?", sender: "bot" },
   ]);
   const [isTyping, setIsTyping] = useState(false);
+  const messagesEndRef = useRef(null);
 
-  const GEMINI_API_KEY = "AIzaSyBBmNXQqG_5UX1tVpXRptR11ruv4aTXxQE";
-  const GEMINI_API_URL =
-    "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent";
+  const genAI = new GoogleGenerativeAI('AIzaSyBBmNXQqG_5UX1tVpXRptR11ruv4aTXxQE');
+  const model = genAI.getGenerativeModel({ model: "gemini-pro" });
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -20,36 +21,17 @@ const Chatbot = ({ onClose }) => {
 
     const userMessage = message.trim();
     setMessages((prev) => [...prev, { text: userMessage, sender: "user" }]);
-    setMessage("");
+    setMessage('');
     setIsTyping(true);
 
     try {
       // API call to Gemini
-      const response = await fetch(`${GEMINI_API_URL}?key=${GEMINI_API_KEY}`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          contents: [
-            {
-              parts: [{ text: userMessage }],
-            },
-          ],
-        }),
-      });
+      const prompt = `You are Dina, a friendly and conversational chatbot assistant. You are assisting in giving information about everything bioinformation, like gene mutation, visualization.Respond in an understandable way and within a sentence. Avoid bold and italics as it affects the visual pleasure of the response. No need to introduce yourself unless you asked about yourself.Respond to the following message in a conversational manner as if you are talking to a person: ${userMessage}`;
+      const result = await model.generateContent(prompt);
+      const response = await result.response;
+      const botReply = await response.text();
 
-      const data = await response.json();
-
-      if (data.contents && data.contents[0] && data.contents[0].parts) {
-        const botReply = data.contents[0].parts.map((part) => part.text).join(" ");
-        setMessages((prev) => [...prev, { text: botReply, sender: "bot" }]);
-      } else {
-        setMessages((prev) => [
-          ...prev,
-          { text: "Sorry, I couldn't process that. Please try again!", sender: "bot" },
-        ]);
-      }
+      setMessages((prev) => [...prev, { text: botReply, sender: "bot" }]);
     } catch (error) {
       console.error("Error fetching from Gemini API:", error);
       setMessages((prev) => [
@@ -61,11 +43,15 @@ const Chatbot = ({ onClose }) => {
     }
   };
 
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
+
   return (
     <AnimatePresence>
       <motion.div
         initial={{ opacity: 0, scale: 0.95, x: 20 }}
-        animate={{ opacity: 1, scale: 1, x: 0 }}
+        animate={{ opacity: 10, scale: 1, x: 0 }}
         exit={{ opacity: 0, scale: 0.95, x: 20 }}
         className="fixed bottom-4 right-4 w-80 bg-navy-900 rounded-lg shadow-xl border border-indigo-500/20 overflow-hidden"
       >
@@ -79,27 +65,21 @@ const Chatbot = ({ onClose }) => {
           </button>
         </div>
 
-        <div className="h-96 p-4 overflow-y-auto">
+        <div className="bg-gray-700 h-96 p-4 overflow-y-auto scrollbar-thin scrollbar-thumb-black scrollbar-track-gray-900">
           {messages.map((msg, index) => (
-            <div
-              key={index}
-              className={`p-3 mb-4 rounded-lg ${
-                msg.sender === "bot"
-                  ? "bg-indigo-500/10 text-white"
-                  : "bg-indigo-700 text-gray-200 self-end"
-              }`}
-            >
-              <p>{msg.text}</p>
+            <div key={index} className={`mb-4 ${msg.sender === 'bot' ? 'bg-red-950' : 'bg-red-800'} rounded-lg p-3`}>
+              <p className="text-white">{msg.text}</p>
             </div>
           ))}
           {isTyping && (
-            <div className="p-3 mb-4 bg-indigo-500/10 rounded-lg">
-              <p className="text-white">...</p>
+            <div className="mb-4 bg-indigo-500/10 rounded-lg p-3">
+              <MessageCircleMore className="text-white" />
             </div>
           )}
+          <div ref={messagesEndRef} />
         </div>
 
-        <form onSubmit={handleSubmit} className="p-4 border-t border-indigo-500/20">
+        <form onSubmit={handleSubmit} className="bg-gray-700 p-4 border-t border-indigo-500/20">
           <div className="flex space-x-2">
             <input
               type="text"
