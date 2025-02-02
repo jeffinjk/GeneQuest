@@ -1,38 +1,100 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { Camera, Calendar, Trophy, BookOpen } from 'lucide-react';
+import { doc, getDoc, updateDoc } from 'firebase/firestore';
+import { db } from '../../config/firebase';
+import { updateProfile } from 'firebase/auth';
 
 const Profile = () => {
   const { user } = useAuth();
+  const [userData, setUserData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [displayName, setDisplayName] = useState(user?.displayName || '');
-  const [photoURL, setPhotoURL] = useState(user?.photoURL || 'https://images.unsplash.com/photo-1633332755192-727a05c4013d?auto=format&fit=crop&w=200&h=200');
+  const [photoURL, setPhotoURL] = useState(
+    user?.photoURL || 'https://images.unsplash.com/photo-1633332755192-727a05c4013d?auto=format&fit=crop&w=200&h=200'
+  );
   const [isEditing, setIsEditing] = useState(false);
 
-  const userStats = {
-    dateJoined: user?.metadata.creationTime ? new Date(user.metadata.creationTime).toLocaleDateString() : 'N/A',
-    currentModule: 'DNA Structure and Function',
-    currentRank: 'Gene Explorer',
-    progress: 65,
-    completedModules: 3,
-    totalModules: 10
-  };
+  useEffect(() => {
+    const fetchUserData = async () => {
+      if (!user) return;
 
-  const handlePhotoUpload = (event) => {
+      try {
+        const userDoc = await getDoc(doc(db, 'users', user.uid));
+        if (userDoc.exists()) {
+          setUserData(userDoc.data());
+        }
+      } catch (err) {
+        setError('Failed to fetch user data');
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchUserData();
+  }, [user]);
+
+  const handlePhotoUpload = async (event) => {
     const file = event.target.files?.[0];
-    if (file) {
-      // TODO: Implement photo upload to Firebase Storage
+    if (!file || !user) return;
+
+    try {
+      // For now, we'll just update the local state
+      // In a real app, you would upload to Firebase Storage first
       const reader = new FileReader();
-      reader.onload = (e) => {
-        setPhotoURL(e.target?.result);
+      reader.onload = async (e) => {
+        const newPhotoURL = e.target?.result;
+        setPhotoURL(newPhotoURL);
+        
+        // Update Firebase Auth profile
+        await updateProfile(user, { photoURL: newPhotoURL });
+        
+        // Update Firestore document
+        const userDoc = doc(db, 'users', user.uid);
+        await updateDoc(userDoc, { photoURL: newPhotoURL });
       };
       reader.readAsDataURL(file);
+    } catch (err) {
+      setError('Failed to update profile photo');
+      console.error(err);
     }
   };
 
-  const handleNameUpdate = () => {
-    // TODO: Implement name update in Firebase Auth
-    setIsEditing(false);
+  const handleNameUpdate = async () => {
+    if (!user || !displayName.trim()) return;
+
+    try {
+      // Update Firebase Auth profile
+      await updateProfile(user, { displayName });
+      
+      // Update Firestore document
+      const userDoc = doc(db, 'users', user.uid);
+      await updateDoc(userDoc, { name: displayName });
+      
+      setIsEditing(false);
+    } catch (err) {
+      setError('Failed to update name');
+      console.error(err);
+    }
   };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500"></div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="text-red-500 text-center p-4">
+        {error}
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-4xl mx-auto space-y-8">
@@ -68,7 +130,7 @@ const Profile = () => {
                 />
               ) : (
                 <h1 className="text-2xl font-bold text-white">
-                  {displayName || 'Add your name'}
+                  {displayName || userData?.name || 'Add your name'}
                 </h1>
               )}
               <button
@@ -80,7 +142,7 @@ const Profile = () => {
             </div>
             <div className="flex items-center gap-2 text-gray-400">
               <Calendar className="h-4 w-4" />
-              <span>Joined {userStats.dateJoined}</span>
+              <span>Joined {new Date(userData?.createdAt || '').toLocaleDateString()}</span>
             </div>
           </div>
         </div>
@@ -96,18 +158,18 @@ const Profile = () => {
             <div>
               <div className="flex justify-between text-sm text-gray-400 mb-1">
                 <span>Current Module</span>
-                <span>{userStats.currentModule}</span>
+                <span>{userData?.currentModule}</span>
               </div>
               <div className="h-2 bg-navy-800 rounded-full">
                 <div
                   className="h-2 bg-indigo-600 rounded-full"
-                  style={{ width: `${userStats.progress}%` }}
+                  style={{ width: `${userData?.progress}%` }}
                 ></div>
               </div>
             </div>
             <div className="flex justify-between text-sm text-gray-400">
               <span>Completed Modules</span>
-              <span>{userStats.completedModules} / {userStats.totalModules}</span>
+              <span>{userData?.completedModules} / {userData?.totalModules}</span>
             </div>
           </div>
         </div>
@@ -122,7 +184,7 @@ const Profile = () => {
               <Trophy className="h-12 w-12 text-indigo-400" />
             </div>
             <h3 className="text-xl font-semibold text-white mb-2">
-              {userStats.currentRank}
+              {userData?.currentRank}
             </h3>
             <p className="text-gray-400 text-sm">
               Keep learning to unlock the next rank!

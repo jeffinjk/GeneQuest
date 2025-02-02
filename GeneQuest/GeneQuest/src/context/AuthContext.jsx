@@ -3,9 +3,11 @@ import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   signOut,
-  onAuthStateChanged
+  onAuthStateChanged,
+  updateProfile
 } from 'firebase/auth';
-import { auth } from '../config/firebase';
+import { doc, setDoc } from 'firebase/firestore';
+import { auth, db } from '../config/firebase';
 
 const AuthContext = createContext(null);
 
@@ -30,9 +32,31 @@ export const AuthProvider = ({ children }) => {
     return unsubscribe;
   }, []);
 
-  const signup = async (email, password) => {
+  const signup = async (name, email, password) => {
     try {
-      await createUserWithEmailAndPassword(auth, email, password);
+      // Create the user in Firebase Auth
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+
+      // Update the user's display name
+      await updateProfile(user, {
+        displayName: name
+      });
+
+      // Create a user document in Firestore
+      const userDoc = doc(db, 'users', user.uid);
+      await setDoc(userDoc, {
+        name,
+        email,
+        username: email.split('@')[0], // Create a simple username from email
+        createdAt: new Date().toISOString(),
+        lastLogin: new Date().toISOString(),
+        currentModule: 'DNA Structure and Function',
+        currentRank: 'Gene Explorer',
+        progress: 0,
+        completedModules: 0,
+        totalModules: 10
+      });
     } catch (error) {
       throw error;
     }
@@ -40,7 +64,13 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (email, password) => {
     try {
-      await signInWithEmailAndPassword(auth, email, password);
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      
+      // Update last login in Firestore
+      const userDoc = doc(db, 'users', userCredential.user.uid);
+      await setDoc(userDoc, {
+        lastLogin: new Date().toISOString()
+      }, { merge: true });
     } catch (error) {
       throw error;
     }

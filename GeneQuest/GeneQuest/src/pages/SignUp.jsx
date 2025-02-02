@@ -22,7 +22,7 @@ const SignUp = () => {
     try {
       setError('');
       setLoading(true);
-      await signup(email, password);
+      await signup(name, email, password);
       navigate('/dashboard');
     } catch (error) {
       setError('Failed to create an account. Please try again.');
