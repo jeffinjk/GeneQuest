@@ -15,42 +15,13 @@ import {
   setDoc,
   getDoc
 } from 'firebase/firestore';
+import Papa from 'papaparse';
 
-const questions = [
-  {
-    id: 1,
-    question: "What is the process of converting DNA to RNA called?",
-    options: ["Translation", "Transcription", "Replication", "Transduction"],
-    correctAnswer: 1
-  },
-  {
-    id: 2,
-    question: "Which software is commonly used for sequence alignment?",
-    options: ["BLAST", "Photoshop", "Excel", "Word"],
-    correctAnswer: 0
-  },
-  {
-    id: 3,
-    question: "What does FASTA format store?",
-    options: ["Images", "Sequence data", "Sound files", "Videos"],
-    correctAnswer: 1
-  },
-  {
-    id: 4,
-    question: "Which is NOT a nucleotide base found in DNA?",
-    options: ["Adenine", "Uracil", "Guanine", "Cytosine"],
-    correctAnswer: 1
-  },
-  {
-    id: 5,
-    question: "What does PCR stand for?",
-    options: ["Protein Chain Reaction", "Polymerase Chain Reaction", "Peptide Chain Reaction", "Primary Chain Reaction"],
-    correctAnswer: 1
-  }
-];
+
 
 const GeQuefy = () => {
   const { user } = useAuth();
+  const [questions, setQuestions] = useState([]);
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [score, setScore] = useState(0);
   const [timeLeft, setTimeLeft] = useState(0);
@@ -62,6 +33,34 @@ const GeQuefy = () => {
   const [isQuizStarted, setIsQuizStarted] = useState(false);
   const [error, setError] = useState(null);
   const [userBestScore, setUserBestScore] = useState(null);
+
+
+    useEffect(() => {
+    const fetchQuestions = async () => {
+      try {
+        const response = await fetch('/assets/jjj.csv'); // Adjust path as necessary
+        const csvText = await response.text();
+        Papa.parse(csvText, {
+          header: true,
+          skipEmptyLines: true,
+          complete: (result) => {
+            const formattedQuestions = result.data.map((row, index) => ({
+              id: index + 1,
+              question: row.Question,
+              options: [row.option1, row.option2, row.option3, row.option4],
+              correctAnswer: parseInt(row.correctAnswer, 10),
+            }));
+            setQuestions(formattedQuestions);
+          },
+        });
+      } catch (error) {
+        console.error('Error loading questions:', error);
+        setError('Failed to load quiz questions.');
+      }
+    };
+
+    fetchQuestions();
+  }, []);
 
   const timeOptions = [
     { seconds: 30, label: '30 Seconds' },
