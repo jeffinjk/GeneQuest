@@ -1,27 +1,30 @@
-import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { Timer, Trophy, Brain, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
-import { useAuth } from '../../context/AuthContext';
-import { db } from '../../config/firebase';
-import { 
-  collection, 
-  getDocs, 
-  orderBy, 
-  query, 
+import React, { useState, useEffect } from "react";
+import { motion } from "framer-motion";
+import {
+  Timer,
+  Trophy,
+  Brain,
+  CheckCircle,
+  XCircle,
+  AlertCircle,
+} from "lucide-react";
+import { useAuth } from "../../context/AuthContext";
+import { db } from "../../config/firebase";
+import {
+  collection,
+  getDocs,
+  orderBy,
+  query,
   limit,
   where,
   Timestamp,
   doc,
   setDoc,
-  getDoc
-} from 'firebase/firestore';
-import Papa from 'papaparse';
-
-
+  getDoc,
+} from "firebase/firestore";
 
 const GeQuefy = () => {
   const { user } = useAuth();
-  const [questions, setQuestions] = useState([]);
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [score, setScore] = useState(0);
   const [timeLeft, setTimeLeft] = useState(0);
@@ -33,55 +36,63 @@ const GeQuefy = () => {
   const [isQuizStarted, setIsQuizStarted] = useState(false);
   const [error, setError] = useState(null);
   const [userBestScore, setUserBestScore] = useState(null);
+  const [questions, setQuestions] = useState([]);
 
+  const timeOptions = [
+    { seconds: 30, label: "30 Seconds" },
+    { seconds: 60, label: "1 Minute" },
+    { seconds: 120, label: "2 Minutes" },
+    { seconds: 180, label: "3 Minutes" },
+  ];
 
-    useEffect(() => {
+  const shuffleArray = (array) => {
+    for (let i = array.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [array[i], array[j]] = [array[j], array[i]];
+    }
+    return array;
+  };
+
+  useEffect(() => {
     const fetchQuestions = async () => {
       try {
-        const response = await fetch('/assets/jjj.csv'); // Adjust path as necessary
+        const response = await fetch("/src/assets/jjj.csv");
         const csvText = await response.text();
-        Papa.parse(csvText, {
-          header: true,
-          skipEmptyLines: true,
-          complete: (result) => {
-            const formattedQuestions = result.data.map((row, index) => ({
-              id: index + 1,
-              question: row.Question,
-              options: [row.option1, row.option2, row.option3, row.option4],
-              correctAnswer: parseInt(row.correctAnswer, 10),
-            }));
-            setQuestions(formattedQuestions);
-          },
+
+        const rows = csvText.split("\n").slice(1); // Skip the header row
+        const allQuestions = rows.map((row, index) => {
+          const [question, ...options] = row.split(",");
+          const correctAnswer = parseInt(options.pop()?.trim(), 10); // Parse as integer
+          return {
+            id: index,
+            question: question.trim(),
+            options: options.map((opt) => opt.trim()),
+            correctAnswer, // Ensure this is an integer
+          };
         });
-      } catch (error) {
-        console.error('Error loading questions:', error);
-        setError('Failed to load quiz questions.');
+
+        const randomQuestions = shuffleArray([...allQuestions]).slice(0, 10);
+        setQuestions(randomQuestions);
+      } catch (err) {
+        console.error("Error loading questions:", err);
+        setError("Failed to load quiz questions");
       }
     };
 
     fetchQuestions();
   }, []);
 
-  const timeOptions = [
-    { seconds: 30, label: '30 Seconds' },
-    { seconds: 60, label: '1 Minute' },
-    { seconds: 120, label: '2 Minutes' },
-    { seconds: 180, label: '3 Minutes' }
-  ];
-
   useEffect(() => {
     const fetchLeaderboardData = async () => {
       try {
         const leaderboardRef = collection(db, "leaderboard");
-        const q = query(leaderboardRef, orderBy("score", "desc"));
+        const q = query(leaderboardRef, orderBy("score", "desc"), limit(5)); // Fetch top 5 scores
         const querySnapshot = await getDocs(q);
-        const leaderboardData = querySnapshot.docs.map(doc => ({
+        const leaderboardData = querySnapshot.docs.map((doc) => ({
           id: doc.id,
-          ...doc.data()
+          ...doc.data(),
         }));
-
-        // Store only the top 5 scores in state
-        setLeaderboard(leaderboardData.slice(0, 5));
+        setLeaderboard(leaderboardData);
 
         if (user) {
           const userScoresQuery = query(
@@ -92,22 +103,22 @@ const GeQuefy = () => {
           );
           const userScoresSnapshot = await getDocs(userScoresQuery);
           if (!userScoresSnapshot.empty) {
-            setUserBestScore(userScoresSnapshot.docs[0].data().score);
+            setUserBestScore(userScoresSnapshot.docs[0].data().score); // Set the user's best score
           }
         }
       } catch (err) {
-        console.error('Error fetching leaderboard:', err);
-        setError('Failed to load leaderboard data');
+        console.error("Error fetching leaderboard:", err);
+        setError("Failed to load leaderboard data");
       }
     };
 
     fetchLeaderboardData();
-}, [user]);
+  }, [user]);
 
   useEffect(() => {
     if (timeLeft > 0 && isQuizStarted && !isQuizComplete) {
       const timer = setInterval(() => {
-        setTimeLeft(prev => {
+        setTimeLeft((prev) => {
           if (prev <= 1) {
             setIsQuizComplete(true);
             return 0;
@@ -120,21 +131,21 @@ const GeQuefy = () => {
   }, [timeLeft, isQuizStarted, isQuizComplete]);
 
   const handleAnswerSelect = async (answerIndex) => {
-    if (selectedAnswer !== null) return;
+    if (selectedAnswer !== null || questions.length === 0) return;
     setSelectedAnswer(answerIndex);
 
     const isCorrect = answerIndex === questions[currentQuestion].correctAnswer;
     if (isCorrect) {
-      const timeBonus = Math.floor(timeLeft / quizTime * 50);
-      setScore(prev => prev + 100 + timeBonus);
+      const timeBonus = Math.floor((timeLeft / quizTime) * 50);
+      setScore((prev) => prev + 100 + timeBonus);
     }
 
     setTimeout(() => {
       if (currentQuestion < questions.length - 1) {
-        setCurrentQuestion(prev => prev + 1);
-        setSelectedAnswer(null);
+        setCurrentQuestion((prev) => prev + 1); // Move to the next question
+        setSelectedAnswer(null); // Reset selected answer
       } else {
-        setIsQuizComplete(true);
+        setIsQuizComplete(true); // End the quiz if all questions are answered
         handleQuizComplete();
       }
     }, 1000);
@@ -142,23 +153,23 @@ const GeQuefy = () => {
 
   const handleQuizComplete = async () => {
     if (!user) {
-      setError('You must be logged in to save your score');
+      setError("You must be logged in to save your score");
       return;
     }
 
     try {
       const timeTaken = quizTime - timeLeft;
-      
+
       const userDocRef = doc(db, "leaderboard", user.uid);
       const userDocSnap = await getDoc(userDocRef);
-      
+
       const newScore = {
         userId: user.uid,
-        name: user.displayName || 'Anonymous',
+        name: user.displayName || "Anonymous",
         score,
         time: timeTaken,
         timeLimit: quizTime,
-        timestamp: Timestamp.now()
+        timestamp: Timestamp.now(),
       };
 
       if (!userDocSnap.exists() || userDocSnap.data().score < score) {
@@ -167,16 +178,16 @@ const GeQuefy = () => {
       }
 
       const leaderboardRef = collection(db, "leaderboard");
-      const q = query(leaderboardRef, orderBy("score", "desc"), limit(10));
+      const q = query(leaderboardRef, orderBy("score", "desc"), limit(5)); // Fetch top 5 scores
       const querySnapshot = await getDocs(q);
-      const leaderboardData = querySnapshot.docs.map(doc => ({
+      const leaderboardData = querySnapshot.docs.map((doc) => ({
         id: doc.id,
-        ...doc.data()
+        ...doc.data(),
       }));
       setLeaderboard(leaderboardData);
     } catch (err) {
-      console.error('Error saving score:', err);
-      setError('Failed to save your score');
+      console.error("Error saving score:", err);
+      setError("Failed to save your score");
     }
   };
 
@@ -191,10 +202,11 @@ const GeQuefy = () => {
   const formatTime = (seconds) => {
     const minutes = Math.floor(seconds / 60);
     const remainingSeconds = seconds % 60;
-    return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
+    return `${minutes}:${remainingSeconds.toString().padStart(2, "0")}`;
   };
 
   const restartQuiz = () => {
+    setQuestions((prevQuestions) => shuffleArray([...prevQuestions]));
     setCurrentQuestion(0);
     setScore(0);
     setTimeLeft(0);
@@ -204,6 +216,17 @@ const GeQuefy = () => {
     setIsQuizStarted(false);
     setError(null);
   };
+
+  if (questions.length === 0) {
+    return (
+      <div className="min-h-screen bg-navy-950 text-white p-8 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500 mx-auto mb-4"></div>
+          <p className="text-gray-400">Loading questions...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-navy-950 text-white p-8">
@@ -225,11 +248,20 @@ const GeQuefy = () => {
             <div className="flex items-center space-x-6">
               <motion.div
                 animate={{ scale: timeLeft < 10 ? [1, 1.1, 1] : 1 }}
-                transition={{ repeat: timeLeft < 10 ? Infinity : 0, duration: 0.5 }}
+                transition={{
+                  repeat: timeLeft < 10 ? Infinity : 0,
+                  duration: 0.5,
+                }}
                 className="flex items-center space-x-2"
               >
-                <Timer className={`w-6 h-6 ${timeLeft < 10 ? 'text-red-400' : 'text-indigo-400'}`} />
-                <span className="text-xl font-mono">{formatTime(timeLeft)}</span>
+                <Timer
+                  className={`w-6 h-6 ${
+                    timeLeft < 10 ? "text-red-400" : "text-indigo-400"
+                  }`}
+                />
+                <span className="text-xl font-mono">
+                  {formatTime(timeLeft)}
+                </span>
               </motion.div>
               <div className="flex items-center space-x-2">
                 <Trophy className="w-6 h-6 text-indigo-400" />
@@ -285,7 +317,9 @@ const GeQuefy = () => {
           >
             <div className="space-y-6">
               <div className="flex justify-between items-center">
-                <h2 className="text-xl font-semibold">Question {currentQuestion + 1} of {questions.length}</h2>
+                <h2 className="text-xl font-semibold">
+                  Question {currentQuestion + 1} of {questions.length}
+                </h2>
                 <span className="text-gray-400">Score: {score}</span>
               </div>
               <p className="text-lg">{questions[currentQuestion].question}</p>
@@ -299,19 +333,20 @@ const GeQuefy = () => {
                     disabled={selectedAnswer !== null}
                     className={`w-full text-left p-4 rounded-lg transition-colors ${
                       selectedAnswer === null
-                        ? 'bg-navy-800 hover:bg-indigo-600/20 border border-indigo-500/20'
+                        ? "bg-navy-800 hover:bg-indigo-600/20 border border-indigo-500/20"
                         : selectedAnswer === index
                         ? index === questions[currentQuestion].correctAnswer
-                          ? 'bg-green-500/20 border border-green-500/20'
-                          : 'bg-red-500/20 border border-red-500/20'
-                        : 'bg-navy-800 border border-indigo-500/20'
+                          ? "bg-green-500/20 border border-green-500/20"
+                          : "bg-red-500/20 border border-red-500/20"
+                        : "bg-navy-800 border border-indigo-500/20"
                     }`}
                   >
                     <div className="flex justify-between items-center">
                       <span>{option}</span>
                       {selectedAnswer === index && (
                         <span>
-                          {index === questions[currentQuestion].correctAnswer ? (
+                          {index ===
+                          questions[currentQuestion].correctAnswer ? (
                             <CheckCircle className="w-5 h-5 text-green-500" />
                           ) : (
                             <XCircle className="w-5 h-5 text-red-500" />
@@ -336,7 +371,9 @@ const GeQuefy = () => {
             <h2 className="text-2xl font-bold mb-4">Quiz Complete!</h2>
             <div className="space-y-2 mb-6">
               <p className="text-xl">Final Score: {score} points</p>
-              <p className="text-gray-400">Time Taken: {formatTime(quizTime - timeLeft)}</p>
+              <p className="text-gray-400">
+                Time Taken: {formatTime(quizTime - timeLeft)}
+              </p>
               {userBestScore !== null && score > userBestScore && (
                 <p className="text-green-400">New Personal Best!</p>
               )}
@@ -368,7 +405,9 @@ const GeQuefy = () => {
                 className="flex items-center justify-between p-4 bg-navy-800 rounded-lg border border-indigo-500/20"
               >
                 <div className="flex items-center space-x-4">
-                  <span className="text-xl font-bold text-indigo-400">#{index + 1}</span>
+                  <span className="text-xl font-bold text-indigo-400">
+                    #{index + 1}
+                  </span>
                   <span>{entry.name}</span>
                   {entry.userId === user?.uid && (
                     <span className="text-xs bg-indigo-500/20 text-indigo-400 px-2 py-1 rounded-full">
@@ -378,7 +417,9 @@ const GeQuefy = () => {
                 </div>
                 <div className="flex items-center space-x-4">
                   <span className="font-semibold">{entry.score} pts</span>
-                  <span className="text-sm text-gray-400">{formatTime(entry.time)}</span>
+                  <span className="text-sm text-gray-400">
+                    {formatTime(entry.time)}
+                  </span>
                 </div>
               </motion.div>
             ))}
