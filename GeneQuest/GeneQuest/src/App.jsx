@@ -15,10 +15,19 @@ import { useAuth } from './context/AuthContext';
 import './App.css';
 
 const ProtectedRoute = ({ children }) => {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, loading } = useAuth();
+
+  // Show a loading spinner or message while checking authentication
+  if (loading) {
+    return <div>Loading...</div>; // Replace with a proper loading component
+  }
+
+  // Redirect to login if not authenticated
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
   }
+
+  // Render the protected content if authenticated
   return <>{children}</>;
 };
 
