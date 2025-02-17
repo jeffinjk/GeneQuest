@@ -1,0 +1,11 @@
+question,option1,option2,option3,option4,correctAnswer
+What is the primary database for nucleotide sequences?,GenBank,PDB,KEGG,Pfam,0
+Which algorithm is commonly used for sequence alignment?,BLAST,ClustalW,Smith-Waterman,All of the above,3
+What does FASTA format store?,Protein sequences,Nucleotide sequences,Both,Neither,2
+Which tool is used for genome assembly?,Bowtie,SPAdes,MAFFT,GATK,1
+What is the main purpose of multiple sequence alignment?,Predict gene function,Identify conserved regions,Find mutations,Sequence assembly,1
+Which of these is a protein database?,UniProt,RefSeq,Ensembl,EMBL,0
+Which programming language is widely used in bioinformatics?,Python,C++,R,All of the above,3
+What does SNP stand for?,Single Nucleotide Protein,Single Number Polymorphism,Single Nucleotide Polymorphism,Structural Nucleotide Polymorphism,2
+Which tool is used for protein structure prediction?,BLAST,AlphaFold,BWA,HMMER,1
+Which file format is commonly used for storing variant calling data?,FASTA,GFF,VCF,BED,2
