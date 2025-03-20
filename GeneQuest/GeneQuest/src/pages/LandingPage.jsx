@@ -6,8 +6,6 @@ import {
   Microscope, 
   Brain, 
   GraduationCap, 
-  HeartPulse, 
-  Database,
   Upload,
   Bot,
   Trophy,

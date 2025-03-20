@@ -93,7 +93,7 @@ export const AuthProvider = ({ children }) => {
       }, { merge: true });
 
       // Set a timer to log the user out after 10 minutes
-      setSessionTimer(setTimeout(logout, 15 * 60 * 1000));
+      
     } catch (error) {
       throw error;
     }
