@@ -11,8 +11,8 @@ const Chatbot = ({ onClose }) => {
   const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef(null);
 
-  const genAI = new GoogleGenerativeAI('AIzaSyBBmNXQqG_5UX1tVpXRptR11ruv4aTXxQE');
-  const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+  const genAI = new GoogleGenerativeAI('AIzaSyD8MOM0pxVrdRpw5sKeC0pgJRCZXtPGWbY');
+  const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
 
   const handleSubmit = async (e) => {
     e.preventDefault();
