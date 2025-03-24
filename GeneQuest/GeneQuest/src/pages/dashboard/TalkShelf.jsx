@@ -44,8 +44,8 @@ const TalkShelf = () => {
   const [error, setError] = useState(null);
   const [activeTab, setActiveTab] = useState("joined");
   const [isTyping, setIsTyping] = useState(false);
-  const [factChecks, setFactChecks] = useState([]); // Store fact-check results
-  const [visibleFactChecks, setVisibleFactChecks] = useState({}); // Track visibility of fact-checks
+  const [factChecks, setFactChecks] = useState([]);
+  const [visibleFactChecks, setVisibleFactChecks] = useState({});
   const messagesEndRef = useRef(null);
   const [loading, setLoading] = useState(true);
 
@@ -162,7 +162,7 @@ const TalkShelf = () => {
   const toggleFactCheckVisibility = (id) => {
     setVisibleFactChecks((prev) => ({
       ...prev,
-      [id]: !prev[id], // Toggle visibility for the specific fact-check
+      [id]: !prev[id],
     }));
   };
 
@@ -259,10 +259,16 @@ const TalkShelf = () => {
 
     try {
       const roomRef = doc(db, "chatRooms", roomId);
+      const roomToJoin = availableRooms.find(room => room.id === roomId);
+      
       await updateDoc(roomRef, {
         members: arrayUnion(user.uid),
-        memberCount: (selectedRoom.memberCount || 0) + 1,
+        memberCount: (roomToJoin.memberCount || 0) + 1,
       });
+      
+      // Update local state to reflect the change
+      setAvailableRooms(availableRooms.filter(room => room.id !== roomId));
+      setRooms([...rooms, {...roomToJoin, members: [...roomToJoin.members, user.uid]}]);
     } catch (err) {
       console.error("Error joining room:", err);
       setError("Failed to join room");

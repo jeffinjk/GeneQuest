@@ -62,7 +62,7 @@ const levels = [
       'Create custom visualizations',
       'Help other users'
     ],
-    xpRequired: 1000
+    xpRequired: 1500
   }
 ];
 
