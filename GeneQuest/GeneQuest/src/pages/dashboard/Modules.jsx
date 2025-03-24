@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Book, Dna, FileText, ChevronDown, ChevronRight, Award, Sparkles, Microscope, Binary, FlaskRound as Flask, Brain } from 'lucide-react';
+import { Book, Dna, FileText, ChevronDown, ChevronRight, ChevronLeft, Award, Sparkles, Microscope, Binary, FlaskRound as Flask, Brain } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { doc, updateDoc, getDoc, arrayUnion } from 'firebase/firestore';
 import { db, auth } from '../../config/firebase';
 
+// MODULES DATA ARRAY (add your content here)
 const modules = [
   {
     id: 1,
@@ -645,87 +646,144 @@ const modules = [
   }
 ];
 
+// Enhanced Confetti Celebration
+const celebrateCompletion = () => {
+  // Left burst
+  confetti({
+    particleCount: 150,
+    angle: 60,
+    spread: 70,
+    origin: { x: 0, y: 0.7 },
+    colors: ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'],
+    shapes: ['circle', 'square'],
+    scalar: 1.2
+  });
+
+  // Right burst
+  confetti({
+    particleCount: 150,
+    angle: 120,
+    spread: 70,
+    origin: { x: 1, y: 0.7 },
+    colors: ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'],
+    shapes: ['circle', 'square'],
+    scalar: 1.2
+  });
+
+  // Center burst after delay
+  setTimeout(() => {
+    confetti({
+      particleCount: 300,
+      spread: 100,
+      origin: { x: 0.5, y: 0.5 },
+      colors: ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'],
+      shapes: ['circle', 'square'],
+      scalar: 1.5,
+      ticks: 200
+    });
+  }, 350);
+
+  // Falling confetti for longer duration
+  setTimeout(() => {
+    const end = Date.now() + 2000;
+    const colors = ['#3b82f6', '#10b981', '#f59e0b'];
+    
+    (function frame() {
+      confetti({
+        particleCount: 3,
+        angle: 60,
+        spread: 55,
+        origin: { x: 0 },
+        colors: colors,
+        scalar: 0.8
+      });
+      confetti({
+        particleCount: 3,
+        angle: 120,
+        spread: 55,
+        origin: { x: 1 },
+        colors: colors,
+        scalar: 0.8
+      });
+
+      if (Date.now() < end) {
+        requestAnimationFrame(frame);
+      }
+    }());
+  }, 500);
+};
+
+// Interactive Flowchart Component
 const Flowchart = ({ nodes }) => {
-  return (
-    <div className="mt-6 p-6 glass-effect rounded-lg">
-      <div className="flex flex-col items-center space-y-8">
-        {nodes.map((node, index) => (
+  const [expandedNodes, setExpandedNodes] = useState(new Set());
+
+  const toggleNode = (nodeId) => {
+    const newExpanded = new Set(expandedNodes);
+    if (newExpanded.has(nodeId)) {
+      newExpanded.delete(nodeId);
+    } else {
+      newExpanded.add(nodeId);
+    }
+    setExpandedNodes(newExpanded);
+  };
+
+  const renderNode = (node, depth = 0) => {
+    const hasChildren = node.children && node.children.length > 0;
+    const isExpanded = expandedNodes.has(node.id);
+
+    return (
+      <div key={node.id} className="relative">
+        <motion.div
+          whileHover={{ scale: 1.03 }}
+          whileTap={{ scale: 0.98 }}
+          onClick={() => hasChildren && toggleNode(node.id)}
+          className={`flowchart-node ${hasChildren ? 'cursor-pointer' : ''} ${
+            depth === 0 
+              ? 'bg-gradient-to-r from-blue-600 to-blue-500' 
+              : depth === 1 
+                ? 'bg-gradient-to-r from-purple-600 to-purple-500' 
+                : 'bg-gradient-to-r from-indigo-600 to-indigo-500'
+          } text-white p-4 rounded-xl shadow-lg mb-2 min-w-[220px] transition-all`}
+        >
+          <div className="flex items-center justify-between">
+            <div className="font-medium text-sm md:text-base">{node.text}</div>
+            {hasChildren && (
+              <motion.div animate={{ rotate: isExpanded ? 90 : 0 }}>
+                <ChevronRight className="w-4 h-4" />
+              </motion.div>
+            )}
+          </div>
+        </motion.div>
+
+        {hasChildren && isExpanded && (
           <motion.div
-            key={node.id}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: index * 0.1 }}
-            className="relative"
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            transition={{ duration: 0.3 }}
+            className="ml-6 pl-4 border-l-2 border-blue-400/30 mt-2 space-y-2"
           >
-            <motion.div
-              whileHover={{ scale: 1.05 }}
-              className="flowchart-node bg-gradient-to-r from-blue-600 to-blue-400 text-white p-4 rounded-lg text-center min-w-[200px] shadow-lg"
-            >
-              {node.text}
-            </motion.div>
-            {node.children && (
-              <div className="absolute left-1/2 -bottom-8 transform -translate-x-1/2">
-                <svg width="2" height="32" className="overflow-visible">
-                  <line
-                    x1="1"
-                    y1="0"
-                    x2="1"
-                    y2="32"
-                    className="flowchart-line"
-                    stroke="rgb(59, 130, 246)"
-                    strokeWidth="2"
-                  />
-                </svg>
-              </div>
-            )}
-            {node.children && (
-              <div className="flex gap-6 mt-8">
-                {node.children.map((childId) => {
-                  const childNode = nodes.find(n => n.id === childId);
-                  return childNode ? (
-                    <motion.div
-                      key={childId}
-                      initial={{ opacity: 0, scale: 0.8 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      transition={{ delay: index * 0.1 + 0.2 }}
-                      whileHover={{ scale: 1.05 }}
-                      className="flowchart-node bg-gradient-to-r from-blue-500 to-blue-300 text-white p-3 rounded-lg text-center min-w-[150px] shadow-lg"
-                    >
-                      {childNode.text}
-                    </motion.div>
-                  ) : null;
-                })}
-              </div>
-            )}
+            {node.children.map(childId => {
+              const childNode = nodes.find(n => n.id === childId);
+              return childNode ? renderNode(childNode, depth + 1) : null;
+            })}
           </motion.div>
-        ))}
+        )}
+      </div>
+    );
+  };
+
+  const rootNodes = nodes.filter(node => !nodes.some(n => n.children && n.children.includes(node.id)));
+
+  return (
+    <div className="mt-6 p-6 bg-gray-800/50 rounded-xl backdrop-blur-sm">
+      <div className="space-y-3">
+        {rootNodes.map(node => renderNode(node))}
       </div>
     </div>
   );
 };
 
-const celebrateCompletion = () => {
-  confetti({
-    particleCount: 100,
-    spread: 70,
-    origin: { x: 0.1, y: 0.6 }
-  });
-
-  confetti({
-    particleCount: 100,
-    spread: 70,
-    origin: { x: 0.9, y: 0.6 }
-  });
-
-  setTimeout(() => {
-    confetti({
-      particleCount: 200,
-      spread: 100,
-      origin: { x: 0.5, y: 0.5 }
-    });
-  }, 250);
-};
-
+// Main Modules Component
 const Modules = () => {
   const [expandedModule, setExpandedModule] = useState(null);
   const [selectedSubchapter, setSelectedSubchapter] = useState(null);
@@ -805,9 +863,8 @@ const Modules = () => {
       if (isFirstCompletion) {
         const newXp = xp + 50;
         setXp(newXp);
-        celebrateCompletion();
+        celebrateCompletion(); // Enhanced confetti celebration
 
-        // Update Firestore only if first completion
         if (user) {
           const userDoc = doc(db, 'users', user.uid);
           await updateDoc(userDoc, {
@@ -817,7 +874,6 @@ const Modules = () => {
         }
       }
 
-      // Update local state to show completion (even if not first time)
       setCompletedModules((prev) => [...new Set([...prev, expandedModule])]);
       setShowSuccessModal(true);
       
@@ -832,26 +888,29 @@ const Modules = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-900 p-8">
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 p-4 md:p-8">
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         className="max-w-6xl mx-auto"
       >
+        {/* Header */}
         <div className="flex items-center gap-3 mb-8">
-          <Book className="w-8 h-8 text-blue-400" />
+          <div className="p-2 bg-blue-500/20 rounded-lg">
+            <Book className="w-6 h-6 text-blue-400" />
+          </div>
           <h1 className="text-3xl font-bold text-white">Learning Modules</h1>
           <div className="ml-auto flex items-center gap-4">
             <motion.div
               whileHover={{ scale: 1.05 }}
-              className="bg-gray-800 px-4 py-2 rounded-lg flex items-center gap-2"
+              className="bg-gray-800/70 px-4 py-2 rounded-lg flex items-center gap-2 backdrop-blur-sm"
             >
               <Sparkles className="w-5 h-5 text-yellow-400" />
               <span className="text-white font-semibold">{xp} XP</span>
             </motion.div>
             <motion.div
               whileHover={{ scale: 1.05 }}
-              className="bg-gray-800 px-4 py-2 rounded-lg flex items-center gap-2"
+              className="bg-gray-800/70 px-4 py-2 rounded-lg flex items-center gap-2 backdrop-blur-sm"
             >
               <Award className="w-5 h-5 text-purple-400" />
               <span className="text-white font-semibold">Level {Math.floor(xp / 100) + 1}</span>
@@ -859,13 +918,14 @@ const Modules = () => {
           </div>
         </div>
 
+        {/* Main Content */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Modules List */}
           <div className="lg:col-span-1">
             <motion.div
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
-              className="bg-gray-800 rounded-lg p-4"
+              className="bg-gray-800/70 rounded-xl p-4 backdrop-blur-sm border border-gray-700/50"
             >
               <h2 className="text-xl font-semibold text-white mb-4 flex items-center gap-2">
                 <FileText className="w-5 h-5" />
@@ -877,23 +937,25 @@ const Modules = () => {
                     key={module.id}
                     initial={false}
                     animate={{ backgroundColor: expandedModule === module.id ? 'rgba(59, 130, 246, 0.1)' : 'transparent' }}
-                    className="rounded-lg overflow-hidden"
+                    className="rounded-xl overflow-hidden"
                   >
                     <button
                       onClick={() => toggleModule(module.id)}
                       className="w-full text-left"
                     >
-                      <div className={`flex items-center gap-2 p-2 rounded-md transition-colors ${
+                      <div className={`flex items-center gap-2 p-3 rounded-lg transition-colors ${
                         completedModules.includes(module.id)
-                          ? 'text-gray-400 hover:bg-gray-700'
-                          : 'text-white hover:bg-gray-700'
+                          ? 'text-gray-400 hover:bg-gray-700/50'
+                          : 'text-white hover:bg-gray-700/50'
                       }`}>
-                        <module.icon className="w-5 h-5 text-blue-400" />
+                        <div className="p-2 bg-blue-500/10 rounded-lg">
+                          <module.icon className="w-5 h-5 text-blue-400" />
+                        </div>
                         <div className="flex-1">
                           <div className="font-medium flex items-center gap-2">
                             {module.title}
                             {completedModules.includes(module.id) && (
-                              <span className="text-xs bg-green-500 text-white px-2 py-1 rounded-full">
+                              <span className="text-xs bg-green-500/20 text-green-400 px-2 py-1 rounded-full border border-green-500/30">
                                 Completed
                               </span>
                             )}
@@ -917,18 +979,19 @@ const Modules = () => {
                           transition={{ duration: 0.2 }}
                           className="overflow-hidden"
                         >
-                          <div className="pl-7 space-y-2 mt-2">
+                          <div className="pl-12 space-y-2 mt-2">
                             {module.subchapters.map((subchapter) => (
                               <motion.button
                                 key={subchapter.id}
                                 whileHover={{ x: 4, backgroundColor: 'rgba(59, 130, 246, 0.1)' }}
                                 onClick={() => selectSubchapter(subchapter)}
-                                className={`text-sm py-1 px-2 rounded-md w-full text-left ${
+                                className={`text-sm py-2 px-3 rounded-lg w-full text-left flex items-center gap-2 ${
                                   selectedSubchapter?.id === subchapter.id
-                                    ? 'bg-blue-500 text-white'
-                                    : 'text-gray-300 hover:bg-gray-700'
+                                    ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30'
+                                    : 'text-gray-300 hover:bg-gray-700/50'
                                 }`}
                               >
+                                <ChevronRight className="w-3 h-3" />
                                 {subchapter.title}
                               </motion.button>
                             ))}
@@ -936,8 +999,9 @@ const Modules = () => {
                               whileHover={{ scale: 1.02 }}
                               whileTap={{ scale: 0.98 }}
                               onClick={() => startQuiz(module.id)}
-                              className="w-full text-sm py-1 px-2 rounded-md bg-purple-500 text-white hover:bg-purple-600 transition-colors"
+                              className="w-full text-sm py-2 px-3 rounded-lg bg-purple-500/20 text-purple-400 hover:bg-purple-500/30 border border-purple-500/30 transition-colors flex items-center justify-center gap-2 mt-3"
                             >
+                              <Award className="w-4 h-4" />
                               Take Final Quiz
                             </motion.button>
                           </div>
@@ -955,7 +1019,7 @@ const Modules = () => {
             <motion.div
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
-              className="bg-gray-800 rounded-lg p-6"
+              className="bg-gray-800/70 rounded-xl p-6 backdrop-blur-sm border border-gray-700/50 shadow-xl"
             >
               {showQuiz ? (
                 <motion.div
@@ -963,7 +1027,12 @@ const Modules = () => {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.3 }}
                 >
-                  <h2 className="text-2xl font-bold text-white mb-4">Final Quiz</h2>
+                  <div className="flex items-center gap-3 mb-6">
+                    <div className="p-2 bg-purple-500/20 rounded-lg">
+                      <Award className="w-5 h-5 text-purple-400" />
+                    </div>
+                    <h2 className="text-2xl font-bold text-white">Final Quiz</h2>
+                  </div>
                   <div className="space-y-6">
                     {currentQuiz.map((question, index) => (
                       <motion.div
@@ -971,14 +1040,14 @@ const Modules = () => {
                         initial={{ opacity: 0, x: -20 }}
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ delay: index * 0.1 }}
-                        className="bg-gray-700 p-4 rounded-lg"
+                        className="bg-gray-700/50 p-5 rounded-xl border border-gray-600/30"
                       >
-                        <p className="text-white text-lg mb-3">{question.question}</p>
-                        <div className="space-y-2">
+                        <p className="text-white text-lg mb-4 font-medium">{question.question}</p>
+                        <div className="space-y-3">
                           {question.options.map((option) => (
                             <label
                               key={option}
-                              className="flex items-center gap-3 p-2 rounded-md hover:bg-gray-600 cursor-pointer transition-colors"
+                              className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-600/50 cursor-pointer transition-colors"
                             >
                               <input
                                 type="radio"
@@ -987,7 +1056,7 @@ const Modules = () => {
                                 onChange={(e) =>
                                   setQuizAnswers({ ...quizAnswers, [question.id]: e.target.value })
                                 }
-                                className="w-4 h-4 text-blue-500"
+                                className="w-4 h-4 text-blue-500 focus:ring-blue-500"
                               />
                               <span className="text-gray-200">{option}</span>
                             </label>
@@ -999,9 +1068,10 @@ const Modules = () => {
                       whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.98 }}
                       onClick={handleQuizSubmit}
-                      className="w-full py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 font-semibold transition-colors"
+                      className="w-full py-3 bg-blue-600/90 text-white rounded-lg hover:bg-blue-700 font-semibold transition-colors flex items-center justify-center gap-2"
                     >
                       Submit Quiz
+                      <ChevronRight className="w-4 h-4" />
                     </motion.button>
                   </div>
                 </motion.div>
@@ -1013,9 +1083,15 @@ const Modules = () => {
                   transition={{ duration: 0.3 }}
                   className="space-y-6"
                 >
-                  <h2 className="text-2xl font-bold text-white mb-4">
-                    {selectedSubchapter.title}
-                  </h2>
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="p-2 bg-blue-500/20 rounded-lg">
+                      <FileText className="w-5 h-5 text-blue-400" />
+                    </div>
+                    <h2 className="text-2xl font-bold text-white">
+                      {selectedSubchapter.title}
+                    </h2>
+                  </div>
+                  
                   {selectedSubchapter.flowCards && (
                     <div className="relative">
                       <motion.div
@@ -1023,51 +1099,62 @@ const Modules = () => {
                         initial={{ opacity: 0, x: 50 }}
                         animate={{ opacity: 1, x: 0 }}
                         exit={{ opacity: 0, x: -50 }}
-                        className="bg-gray-700 rounded-lg overflow-hidden"
+                        className="bg-gray-700/50 rounded-xl overflow-hidden border border-gray-600/30"
                       >
-                        <img
-                          src={selectedSubchapter.flowCards[currentCardIndex].image}
-                          alt={selectedSubchapter.flowCards[currentCardIndex].title}
-                          className="w-full h-48 object-cover"
-                        />
                         <div className="p-6">
-                          <h3 className="text-xl font-semibold text-white mb-2">
-                            {selectedSubchapter.flowCards[currentCardIndex].title}
-                          </h3>
-                          <p className="text-gray-300 mb-4">
-                            {selectedSubchapter.flowCards[currentCardIndex].content}
-                          </p>
+                          <div className="flex items-start gap-4 mb-4">
+                            <div className="p-3 bg-blue-500/10 rounded-lg">
+                              <Sparkles className="w-5 h-5 text-blue-400" />
+                            </div>
+                            <div>
+                              <h3 className="text-xl font-semibold text-white mb-2">
+                                {selectedSubchapter.flowCards[currentCardIndex].title}
+                              </h3>
+                              <p className="text-gray-300">
+                                {selectedSubchapter.flowCards[currentCardIndex].content}
+                              </p>
+                            </div>
+                          </div>
+                          
                           {selectedSubchapter.flowCards[currentCardIndex].flowchart && (
                             <Flowchart nodes={selectedSubchapter.flowCards[currentCardIndex].flowchart} />
                           )}
                         </div>
                       </motion.div>
-                      <div className="flex justify-between mt-4">
+
+                      <div className="flex justify-between mt-6">
                         <motion.button
                           whileHover={{ scale: 1.05 }}
                           whileTap={{ scale: 0.95 }}
                           onClick={previousCard}
                           disabled={currentCardIndex === 0}
-                          className={`px-4 py-2 rounded-md ${
+                          className={`px-4 py-2 rounded-lg flex items-center gap-2 ${
                             currentCardIndex === 0
-                              ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
-                              : 'bg-blue-500 text-white hover:bg-blue-600'
+                              ? 'bg-gray-700 text-gray-500 cursor-not-allowed'
+                              : 'bg-blue-600/90 text-white hover:bg-blue-700'
                           }`}
                         >
+                          <ChevronLeft className="w-4 h-4" />
                           Previous
                         </motion.button>
+                        
+                        <div className="text-sm text-gray-400">
+                          Card {currentCardIndex + 1} of {selectedSubchapter.flowCards.length}
+                        </div>
+                        
                         <motion.button
                           whileHover={{ scale: 1.05 }}
                           whileTap={{ scale: 0.95 }}
                           onClick={nextCard}
                           disabled={currentCardIndex === selectedSubchapter.flowCards.length - 1}
-                          className={`px-4 py-2 rounded-md ${
+                          className={`px-4 py-2 rounded-lg flex items-center gap-2 ${
                             currentCardIndex === selectedSubchapter.flowCards.length - 1
-                              ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
-                              : 'bg-blue-500 text-white hover:bg-blue-600'
+                              ? 'bg-gray-700 text-gray-500 cursor-not-allowed'
+                              : 'bg-blue-600/90 text-white hover:bg-blue-700'
                           }`}
                         >
                           Next
+                          <ChevronRight className="w-4 h-4" />
                         </motion.button>
                       </div>
                     </div>
@@ -1079,10 +1166,15 @@ const Modules = () => {
                   animate={{ opacity: 1 }}
                   className="text-center py-12"
                 >
-                  <Dna className="w-16 h-16 text-blue-400 mx-auto mb-4" />
-                  <h2 className="text-xl text-gray-300">
+                  <div className="inline-block p-6 bg-blue-500/10 rounded-full mb-6">
+                    <Dna className="w-12 h-12 text-blue-400" />
+                  </div>
+                  <h2 className="text-xl text-gray-300 font-medium">
                     Select a chapter to start learning
                   </h2>
+                  <p className="text-gray-500 mt-2">
+                    Explore our interactive modules on gene visualization
+                  </p>
                 </motion.div>
               )}
             </motion.div>
@@ -1090,20 +1182,25 @@ const Modules = () => {
         </div>
       </motion.div>
 
-      {/* Success Modal */}
+      {/* Success Modal with Confetti */}
       <AnimatePresence>
         {showSuccessModal && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50"
+            className="fixed inset-0 flex items-center justify-center z-50 bg-black/50 backdrop-blur-sm"
+            onAnimationComplete={() => {
+              if (!completedModules.includes(expandedModule)) {
+                celebrateCompletion(); // Extra celebration when modal appears
+              }
+            }}
           >
             <motion.div
               initial={{ scale: 0.5, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.5, opacity: 0 }}
-              className="bg-gray-800 p-8 rounded-lg shadow-xl text-center transform transition-all duration-300"
+              className="bg-gray-800/90 p-8 rounded-xl shadow-2xl text-center border border-gray-700/50 backdrop-blur-sm max-w-md w-full mx-4"
             >
               <motion.div
                 animate={{
@@ -1113,14 +1210,16 @@ const Modules = () => {
                 transition={{ duration: 0.5 }}
                 className="text-6xl mb-4"
               >
-                🧬
+                🎉
               </motion.div>
               <motion.h2
                 initial={{ y: 20, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 className="text-2xl font-bold text-white mb-2"
               >
-                {completedModules.includes(expandedModule) ? 'Module Completed Again!' : 'Congratulations!'}
+                {completedModules.includes(expandedModule) 
+                  ? 'Great Job Again!' 
+                  : 'Module Completed!'}
               </motion.h2>
               {!completedModules.includes(expandedModule) && (
                 <motion.p
@@ -1129,7 +1228,7 @@ const Modules = () => {
                   transition={{ delay: 0.2 }}
                   className="text-blue-400 text-lg"
                 >
-                  +50 XP Earned
+                  +50 XP Earned!
                 </motion.p>
               )}
               <motion.p
@@ -1139,9 +1238,17 @@ const Modules = () => {
                 className="text-gray-300 mt-2"
               >
                 {completedModules.includes(expandedModule) 
-                  ? 'You can review the material anytime!' 
-                  : "You've mastered this module!"}
+                  ? 'You can review the material anytime' 
+                  : "You've unlocked new knowledge!"}
               </motion.p>
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => setShowSuccessModal(false)}
+                className="mt-6 px-6 py-2 bg-blue-600/90 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                Continue Learning
+              </motion.button>
             </motion.div>
           </motion.div>
         )}
