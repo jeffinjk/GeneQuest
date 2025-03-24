@@ -80,341 +80,173 @@ const baseQuestions = [
     correctAnswer: 0
   },
   {
-    id: 10,
-    question: "Which file format is used for storing multiple sequence alignments?",
-    options: [".fasta", ".pdb", ".clustal", ".jpg"],
-    correctAnswer: 2
+    "id": 10,
+    "question": "Which file format is used for storing multiple sequence alignments?",
+    "options": [".fasta", ".pdb", ".clustal", ".jpg"],
+    "correctAnswer": 2
   },
   {
-    id: 11,
-    question: "What is the purpose of a phylogenetic tree?",
-    options: ["To show evolutionary relationships", "To display protein structures", "To organize laboratory equipment", "To count nucleotide bases"],
-    correctAnswer: 0
+    "id": 11,
+    "question": "What is the purpose of a phylogenetic tree?",
+    "options": ["To show evolutionary relationships", "To display protein structures", "To organize laboratory equipment", "To count nucleotide bases"],
+    "correctAnswer": 0
   },
   {
-    id: 12,
-    question: "Which of these is a common next-generation sequencing platform?",
-    options: ["Illumina", "Windows", "MacOS", "Linux"],
-    correctAnswer: 0
+    "id": 12,
+    "question": "Which of these is a common next-generation sequencing platform?",
+    "options": ["Illumina", "Windows", "MacOS", "Linux"],
+    "correctAnswer": 0
   },
   {
-    id: 13,
-    question: "What does SNP stand for?",
-    options: ["Single Nucleotide Polymorphism", "Small Nuclear Protein", "Systematic Network Protocol", "Sequenced Nucleotide Pair"],
-    correctAnswer: 0
+    "id": 13,
+    "question": "What does SNP stand for?",
+    "options": ["Single Nucleotide Polymorphism", "Small Nuclear Protein", "Systematic Network Protocol", "Sequenced Nucleotide Pair"],
+    "correctAnswer": 0
   },
   {
-    id: 14,
-    question: "Which programming language is commonly used in bioinformatics?",
-    options: ["Python", "HTML", "CSS", "JavaScript"],
-    correctAnswer: 0
+    "id": 14,
+    "question": "Which programming language is commonly used in bioinformatics?",
+    "options": ["Python", "HTML", "CSS", "JavaScript"],
+    "correctAnswer": 0
   },
   {
-    id: 15,
-    question: "What is the main function of ribosomes?",
-    options: ["Protein synthesis", "DNA replication", "Energy production", "Cell movement"],
-    correctAnswer: 0
+    "id": 15,
+    "question": "What is the main function of ribosomes?",
+    "options": ["Protein synthesis", "DNA replication", "Energy production", "Cell movement"],
+    "correctAnswer": 0
   },
   {
-    id: 16,
-    question: "Which of these is a common genome assembly algorithm?",
-    options: ["de Bruijn graph", "QuickSort", "Dijkstra's", "Binary search"],
-    correctAnswer: 0
+    "id": 16,
+    "question": "Which of these is a common genome assembly algorithm?",
+    "options": ["de Bruijn graph", "QuickSort", "Dijkstra's", "Binary search"],
+    "correctAnswer": 0
   },
   {
-    id: 17,
-    question: "What does ORF stand for in genomics?",
-    options: ["Open Reading Frame", "Operational Research Function", "Organic Reaction Formula", "Optimal Reading Fragment"],
-    correctAnswer: 0
+    "id": 17,
+    "question": "What does ORF stand for in genomics?",
+    "options": ["Open Reading Frame", "Operational Research Function", "Organic Reaction Formula", "Optimal Reading Fragment"],
+    "correctAnswer": 0
   },
   {
-    id: 18,
-    question: "Which of these is a common multiple sequence alignment tool?",
-    options: ["Clustal Omega", "Word", "Excel", "Photoshop"],
-    correctAnswer: 0
+    "id": 18,
+    "question": "Which of these is a common multiple sequence alignment tool?",
+    "options": ["Clustal Omega", "Word", "Excel", "Photoshop"],
+    "correctAnswer": 0
   },
   {
-    id: 19,
-    question: "What is the purpose of a dot plot in bioinformatics?",
-    options: ["Visualize sequence similarity", "Display protein 3D structure", "Count chromosomes", "Measure cell size"],
-    correctAnswer: 0
+    "id": 19,
+    "question": "What is the purpose of a dot plot in bioinformatics?",
+    "options": ["Visualize sequence similarity", "Display protein 3D structure", "Count chromosomes", "Measure cell size"],
+    "correctAnswer": 0
   },
   {
-    id: 20,
-    question: "Which of these is a common protein database?",
-    options: ["UniProt", "GenBank", "PubMed", "OMIM"],
-    correctAnswer: 0
+    "id": 20,
+    "question": "Which of these is a common protein database?",
+    "options": ["UniProt", "GenBank", "PubMed", "OMIM"],
+    "correctAnswer": 0
   },
   {
-    id: 21,
-    question: "What does NGS stand for?",
-    options: ["Next-Generation Sequencing", "Nuclear Genetic System", "Nucleotide Grouping Standard", "National Genome Service"],
-    correctAnswer: 0
+    "id": 21,
+    "question": "What does NGS stand for?",
+    "options": ["Next-Generation Sequencing", "Nuclear Genetic System", "Nucleotide Grouping Standard", "National Genome Service"],
+    "correctAnswer": 0
   },
   {
-    id: 22,
-    question: "Which of these is a common file format for storing protein structures?",
-    options: [".pdb", ".fasta", ".jpg", ".mp3"],
-    correctAnswer: 0
+    "id": 22,
+    "question": "Which of these is a common file format for storing protein structures?",
+    "options": [".pdb", ".fasta", ".jpg", ".mp3"],
+    "correctAnswer": 0
   },
   {
-    id: 23,
-    question: "What is the purpose of k-mers in genome assembly?",
-    options: ["Break sequences into smaller fragments for analysis", "Measure protein concentration", "Count cells", "Determine pH levels"],
-    correctAnswer: 0
+    "id": 23,
+    "question": "What is the purpose of k-mers in genome assembly?",
+    "options": ["Break sequences into smaller fragments for analysis", "Measure protein concentration", "Count cells", "Determine pH levels"],
+    "correctAnswer": 0
   },
   {
-    id: 24,
-    question: "Which of these is a common RNA-Seq analysis tool?",
-    options: ["DESeq2", "Photoshop", "Excel", "Word"],
-    correctAnswer: 0
+    "id": 24,
+    "question": "Which of these is a common RNA-Seq analysis tool?",
+    "options": ["DESeq2", "Photoshop", "Excel", "Word"],
+    "correctAnswer": 0
   },
   {
-    id: 25,
-    question: "What does ChIP-Seq analyze?",
-    options: ["Protein-DNA interactions", "RNA sequences", "Metabolic pathways", "Cell morphology"],
-    correctAnswer: 0
+    "id": 25,
+    "question": "What does ChIP-Seq analyze?",
+    "options": ["Protein-DNA interactions", "RNA sequences", "Metabolic pathways", "Cell morphology"],
+    "correctAnswer": 0
   },
   {
-    id: 26,
-    question: "Which of these is a common metagenomics analysis tool?",
-    options: ["QIIME", "Excel", "Word", "Photoshop"],
-    correctAnswer: 0
+    "id": 26,
+    "question": "Which of these is a common metagenomics analysis tool?",
+    "options": ["QIIME", "Excel", "Word", "Photoshop"],
+    "correctAnswer": 0
   },
   {
-    id: 27,
-    question: "What is the purpose of a hidden Markov model in bioinformatics?",
-    options: ["Pattern recognition in biological sequences", "3D protein visualization", "Cell counting", "pH measurement"],
-    correctAnswer: 0
+    "id": 27,
+    "question": "What is the purpose of a hidden Markov model in bioinformatics?",
+    "options": ["Pattern recognition in biological sequences", "3D protein visualization", "Cell counting", "pH measurement"],
+    "correctAnswer": 0
   },
   {
-    id: 28,
-    question: "Which of these is a common gene ontology database?",
-    options: ["GO", "GenBank", "PubMed", "OMIM"],
-    correctAnswer: 0
+    "id": 28,
+    "question": "Which of these is a common gene ontology database?",
+    "options": ["GO", "GenBank", "PubMed", "OMIM"],
+    "correctAnswer": 0
   },
   {
-    id: 29,
-    question: "What does GWAS stand for?",
-    options: ["Genome-Wide Association Study", "Gene Weight Analysis System", "Global Web Alignment Server", "Genomic Workflow Assessment Standard"],
-    correctAnswer: 0
+    "id": 29,
+    "question": "What does GWAS stand for?",
+    "options": ["Genome-Wide Association Study", "Gene Weight Analysis System", "Global Web Alignment Server", "Genomic Workflow Assessment Standard"],
+    "correctAnswer": 0
   },
   {
-    id: 30,
-    question: "Which of these is a common variant calling format?",
-    options: ["VCF", "JPEG", "MP3", "DOCX"],
-    correctAnswer: 0
+    "id": 30,
+    "question": "Which of these is a common variant calling format?",
+    "options": ["VCF", "JPEG", "MP3", "DOCX"],
+    "correctAnswer": 0
   },
   {
-    id: 31,
-    question: "What is the purpose of the E-value in BLAST results?",
-    options: ["Measure statistical significance of matches", "Count sequence length", "Measure protein concentration", "Calculate pH"],
-    correctAnswer: 0
+    "id": 31,
+    "question": "What is the purpose of the E-value in BLAST results?",
+    "options": ["Measure statistical significance of matches", "Count sequence length", "Measure protein concentration", "Calculate pH"],
+    "correctAnswer": 0
   },
   {
-    id: 32,
-    question: "Which of these is a common structural bioinformatics tool?",
-    options: ["PyMOL", "Excel", "Word", "Photoshop"],
-    correctAnswer: 0
+    "id": 32,
+    "question": "Which of these is a common structural bioinformatics tool?",
+    "options": ["PyMOL", "Excel", "Word", "Photoshop"],
+    "correctAnswer": 0
   },
   {
-    id: 33,
-    question: "What does RMSD measure in protein structure comparison?",
-    options: ["Structural similarity", "Sequence length", "Molecular weight", "Isoelectric point"],
-    correctAnswer: 0
+    "id": 33,
+    "question": "What does RMSD measure in protein structure comparison?",
+    "options": ["Structural similarity", "Sequence length", "Molecular weight", "Isoelectric point"],
+    "correctAnswer": 0
   },
   {
-    id: 34,
-    question: "Which of these is a common pathway analysis tool?",
-    options: ["KEGG", "Excel", "Word", "Photoshop"],
-    correctAnswer: 0
+    "id": 34,
+    "question": "Which of these is a common pathway analysis tool?",
+    "options": ["KEGG", "Excel", "Word", "Photoshop"],
+    "correctAnswer": 0
   },
   {
-    id: 35,
-    question: "What is the purpose of a read mapper in NGS analysis?",
-    options: ["Align sequences to a reference genome", "Count cells", "Measure protein concentration", "Determine pH"],
-    correctAnswer: 0
+    "id": 35,
+    "question": "What is the purpose of a read mapper in NGS analysis?",
+    "options": ["Align sequences to a reference genome", "Count cells", "Measure protein concentration", "Determine pH"],
+    "correctAnswer": 0
   },
   {
-    id: 36,
-    question: "Which of these is a common genome browser?",
-    options: ["UCSC Genome Browser", "Chrome", "Firefox", "Safari"],
-    correctAnswer: 0
+    "id": 36,
+    "question": "Which of these is a common genome browser?",
+    "options": ["UCSC Genome Browser", "Chrome", "Firefox", "Safari"],
+    "correctAnswer": 0
   },
   {
-    id: 37,
-    question: "What does FPKM stand for in RNA-Seq?",
-    options: ["Fragments Per Kilobase of transcript per Million mapped reads", "Full Protein Kinase Measurement", "Functional Protein Kinetic Model", "Folded Protein Key Metric"],
-    correctAnswer: 0
+    "id": 37,
+    "question": "What does FPKM stand for in RNA-Seq?",
+    "options": ["Fragments Per Kilobase of transcript per Million mapped reads", "Full Protein Kinase Measurement", "Functional Protein Kinetic Model", "Folded Protein Key Metric"],
+    "correctAnswer": 0
   },
-  {
-    id: 38,
-    question: "Which of these is a common de novo assembly tool?",
-    options: ["SPAdes", "Excel", "Word", "Photoshop"],
-    correctAnswer: 0
-  },
-  {
-    id: 39,
-    question: "What is the purpose of BUSCO in genome analysis?",
-    options: ["Assess genome completeness", "Count cells", "Measure protein concentration", "Determine pH"],
-    correctAnswer: 0
-  },
-  {
-    id: 40,
-    question: "Which of these is a common protein-protein interaction database?",
-    options: ["STRING", "GenBank", "PubMed", "OMIM"],
-    correctAnswer: 0
-  },
-  {
-    id: 41,
-    question: "What does CRISPR stand for?",
-    options: ["Clustered Regularly Interspaced Short Palindromic Repeats", "Complete RNA Interference Sequencing Process", "Cellular Ribosomal Integrated System Protocol", "Comprehensive Regulatory Interspecies Sequence"],
-    correctAnswer: 0
-  },
-  {
-    id: 42,
-    question: "Which of these is a common metabolomics database?",
-    options: ["HMDB", "GenBank", "PubMed", "OMIM"],
-    correctAnswer: 0
-  },
-  {
-    id: 43,
-    question: "What is the purpose of a contig in genome assembly?",
-    options: ["Represent overlapping DNA sequences", "Count cells", "Measure protein concentration", "Determine pH"],
-    correctAnswer: 0
-  },
-  {
-    id: 44,
-    question: "Which of these is a common tool for predicting protein secondary structure?",
-    options: ["PSIPRED", "Excel", "Word", "Photoshop"],
-    correctAnswer: 0
-  },
-  {
-    id: 45,
-    question: "What does RPKM stand for in RNA-Seq?",
-    options: ["Reads Per Kilobase of transcript per Million mapped reads", "RNA Protein Kinase Measurement", "Ribosomal Protein Kinetic Model", "Regulatory Protein Key Metric"],
-    correctAnswer: 0
-  },
-  {
-    id: 46,
-    question: "Which of these is a common tool for analyzing DNA methylation?",
-    options: ["Bismark", "Excel", "Word", "Photoshop"],
-    correctAnswer: 0
-  },
-  {
-    id: 47,
-    question: "What is the purpose of a scaffold in genome assembly?",
-    options: ["Represent ordered and oriented contigs", "Count cells", "Measure protein concentration", "Determine pH"],
-    correctAnswer: 0
-  },
-  {
-    id: 48,
-    question: "Which of these is a common tool for predicting transcription factor binding sites?",
-    options: ["MEME", "Excel", "Word", "Photoshop"],
-    correctAnswer: 0
-  },
-  {
-    id: 49,
-    question: "What does TPM stand for in RNA-Seq?",
-    options: ["Transcripts Per Million", "Total Protein Measurement", "Theoretical Protein Model", "Targeted Polymorphism Mapping"],
-    correctAnswer: 0
-  },
-  {
-    id: 50,
-    question: "Which of these is a common tool for analyzing single-cell RNA-Seq data?",
-    options: ["Seurat", "Excel", "Word", "Photoshop"],
-    correctAnswer: 0
-  },
-  {
-    id: 51,
-    question: "What is the purpose of a haplotype in genetics?",
-    options: ["Represent a set of DNA variations inherited together", "Count cells", "Measure protein concentration", "Determine pH"],
-    correctAnswer: 0
-  },
-  {
-    id: 52,
-    question: "Which of these is a common tool for analyzing ChIP-Seq data?",
-    options: ["MACS", "Excel", "Word", "Photoshop"],
-    correctAnswer: 0
-  },
-  {
-    id: 53,
-    question: "What does WGS stand for?",
-    options: ["Whole Genome Sequencing", "Weighted Gene Score", "Western Genomic Standard", "Whole Gene System"],
-    correctAnswer: 0
-  },
-  {
-    id: 54,
-    question: "Which of these is a common tool for analyzing microbiome data?",
-    options: ["QIIME 2", "Excel", "Word", "Photoshop"],
-    correctAnswer: 0
-  },
-  {
-    id: 55,
-    question: "What is the purpose of a Manhattan plot in GWAS?",
-    options: ["Visualize genome-wide association results", "Count cells", "Measure protein concentration", "Determine pH"],
-    correctAnswer: 0
-  },
-  {
-    id: 56,
-    question: "Which of these is a common tool for predicting RNA secondary structure?",
-    options: ["RNAfold", "Excel", "Word", "Photoshop"],
-    correctAnswer: 0
-  },
-  {
-    id: 57,
-    question: "What does PCA stand for in data analysis?",
-    options: ["Principal Component Analysis", "Protein Concentration Assessment", "Primary Cellular Alignment", "Polymorphic Component Array"],
-    correctAnswer: 0
-  },
-  {
-    id: 58,
-    question: "Which of these is a common tool for analyzing ATAC-Seq data?",
-    options: ["MACS2", "Excel", "Word", "Photoshop"],
-    correctAnswer: 0
-  },
-  {
-    id: 59,
-    question: "What is the purpose of a Circos plot?",
-    options: ["Visualize relationships between genomic features", "Count cells", "Measure protein concentration", "Determine pH"],
-    correctAnswer: 0
-  },
-  {
-    id: 60,
-    question: "Which of these is a common tool for predicting protein domains?",
-    options: ["Pfam", "Excel", "Word", "Photoshop"],
-    correctAnswer: 0
-  },
-  {
-    id: 61,
-    question: "What does GO enrichment analysis identify?",
-    options: ["Overrepresented biological functions in gene sets", "Cell counts", "Protein concentrations", "pH levels"],
-    correctAnswer: 0
-  },
-  {
-    id: 62,
-    question: "Which of these is a common tool for analyzing Hi-C data?",
-    options: ["Juicer", "Excel", "Word", "Photoshop"],
-    correctAnswer: 0
-  },
-  {
-    id: 63,
-    question: "What is the purpose of a volcano plot in differential expression analysis?",
-    options: ["Visualize significance versus magnitude of change", "Count cells", "Measure protein concentration", "Determine pH"],
-    correctAnswer: 0
-  },
-  {
-    id: 64,
-    question: "Which of these is a common tool for predicting miRNA targets?",
-    options: ["TargetScan", "Excel", "Word", "Photoshop"],
-    correctAnswer: 0
-  },
-  {
-    id: 65,
-    question: "What does FDR stand for in statistical analysis?",
-    options: ["False Discovery Rate", "Full Data Report", "Functional Domain Region", "Folded Domain Ratio"],
-    correctAnswer: 0
-  }
 ];
 
 const timeOptions = [
@@ -431,6 +263,23 @@ const XP_THRESHOLDS = [
   { score: 800, xp: 55 },
   { score: 1000, xp: 75 }
 ];
+
+const formatGeminiResponse = (text) => {
+  // Remove any markdown formatting and clean up the response
+  let formatted = text
+    .replace(/\*\*/g, '') // Remove bold markers
+    .replace(/\*/g, '')   // Remove italic markers
+    .replace(/\[(.*?)\]\((.*?)\)/g, '$1 ($2)'); // Convert markdown links to plain text
+
+  // Add emoji replacements for common patterns
+  formatted = formatted
+    .replace(/strengths:/gi, '💪 Strengths:')
+    .replace(/weaknesses:/gi, '⚠️ Weaknesses:')
+    .replace(/resources:/gi, '📚 Resources:')
+    .replace(/next steps:/gi, '🚀 Next Steps:');
+
+  return formatted;
+};
 
 const GeQuefy = () => {
   const { user } = useAuth();
@@ -584,40 +433,26 @@ const GeQuefy = () => {
       };
 
       const prompt = `
-        You are an AI expert bioinformatics tutor analyzing a student's quiz results. 
-        The student just completed a ${quizData.difficulty} level quiz with ${quizData.totalQuestions} questions 
-        and scored ${quizData.score} points (${quizData.percentage}% correct) 
-        in ${formatTime(quizData.timeTaken)}.
+        You're a fun, game-like AI tutor analyzing a bioinformatics quiz. The player scored ${quizData.score} points (${quizData.percentage}%) in ${quizData.difficulty} mode.
 
-        Here are the question-by-question results:
-        ${quizData.questions.map((q, i) => `
-          ${i+1}. ${q.question}
-          - Correct answer: ${q.correctAnswer}
-          - Student's answer: ${q.userAnswer || 'Unanswered'}
-          ${q.isCorrect ? '✅ Correct' : '❌ Incorrect'}
-        `).join('')}
+        Give a SHORT, EXCITING analysis (3-4 sentences max) with:
+        1. A hype message about their score
+        2. One key strength (emoji)
+        3. One area to improve (emoji)
+        4. One cool resource to check out
+        5. Keep it casual and fun - no formatting or bullet points!
 
-        Provide:
-         A personalized congratulatory message based on their performance
-        show their strengths and weaknesses
-        3. Specific learning resources (books, online courses, videos) they should check based on their mistakes
-        
-        5. Motivational closing remark
-
-        dont make it a long boring analysis.an interesting like in a game type situation
-        Gamify things instead of keeping it professional.Use very few points dont use points even
-        avoid using ** for bold induces or anything like that
-        make it very short start with motivational response then move on to other
+        Example: "Nice score! 🎉 You crushed it on sequence alignment! 🧬 Try Khan Academy's genetics videos to boost your DNA knowledge. Keep leveling up! 💪"
       `;
 
       const result = await model.generateContent(prompt);
       const response = await result.response;
       const text = response.text();
       
-      setGeminiAnalysis(text);
+      setGeminiAnalysis(formatGeminiResponse(text));
     } catch (error) {
       console.error("AI analysis error:", error);
-      setGeminiAnalysis("Couldn't generate analysis. Please try again later.");
+      setGeminiAnalysis("Game analysis failed - but great effort! Try again later.");
     } finally {
       setIsAnalyzing(false);
     }
@@ -908,7 +743,7 @@ const GeQuefy = () => {
               <div className="w-full mt-6 text-left">
                 <h3 className="text-xl font-bold mb-4 flex items-center">
                   <BookOpen className="w-5 h-5 mr-2 text-indigo-400" />
-                  Performance Analysis
+                  Performance Breakdown
                 </h3>
                 
                 {isAnalyzing ? (
@@ -918,15 +753,11 @@ const GeQuefy = () => {
                       <div className="w-3 h-3 bg-indigo-400 rounded-full"></div>
                       <div className="w-3 h-3 bg-indigo-400 rounded-full"></div>
                     </div>
-                    <p className="text-gray-400">Analyzing your results...</p>
+                    <p className="text-gray-400">Generating your battle report...</p>
                   </div>
                 ) : geminiAnalysis ? (
                   <div className="bg-navy-800/50 p-4 rounded-lg border border-indigo-500/20">
-                    {geminiAnalysis.split('\n').map((paragraph, i) => (
-                      <p key={i} className="mb-3 last:mb-0">
-                        {paragraph || <br />}
-                      </p>
-                    ))}
+                    <p className="whitespace-pre-line">{geminiAnalysis}</p>
                   </div>
                 ) : (
                   <p className="text-gray-400 text-center py-4">
@@ -939,7 +770,7 @@ const GeQuefy = () => {
                 onClick={restartQuiz}
                 className="mt-6 bg-indigo-600 text-white px-6 py-3 rounded-lg hover:bg-indigo-700 transition-colors"
               >
-                Try Again
+                Play Again
               </button>
             </div>
           </motion.div>
