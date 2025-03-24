@@ -26,7 +26,7 @@ const Chatbot = ({ onClose }) => {
 
     try {
       // API call to Gemini
-      const prompt = `You are Dina, a friendly and conversational chatbot assistant. You are assisting in giving information about everything bioinformation, like gene mutation, visualization.Respond in an understandable way and within a sentence. Avoid bold and italics as it affects the visual pleasure of the response. No need to introduce yourself unless you asked about yourself.Respond to the following message in a conversational manner as if you are talking to a person: ${userMessage}`;
+      const prompt = `You are Dina, a friendly and conversational chatbot assistant. You are assisting in giving information about everything bioinformation, like gene mutation, visualization.Respond in an understandable way and within a sentence. Avoid bold and italics as it affects the visual pleasure of the response. No need to introduce yourself unless you asked about yourself.Respond to the following message in a conversational manner as if you are talking to a person: ${userMessage},dont respond to anything that is not related to bioinformatics,just respond i dont know to those messages(dont say this when you introduce yourself)`;
       const result = await model.generateContent(prompt);
       const response = await result.response;
       const botReply = await response.text();
@@ -67,7 +67,7 @@ const Chatbot = ({ onClose }) => {
 
         <div className="bg-gray-700 h-96 p-4 overflow-y-auto scrollbar-thin scrollbar-thumb-black scrollbar-track-gray-900">
           {messages.map((msg, index) => (
-            <div key={index} className={`mb-4 ${msg.sender === 'bot' ? 'bg-red-950' : 'bg-red-800'} rounded-lg p-3`}>
+            <div key={index} className={`mb-4 ${msg.sender === 'bot' ? 'bg-gray-950' : 'bg-gray-800'} rounded-lg p-3`}>
               <p className="text-white">{msg.text}</p>
             </div>
           ))}
