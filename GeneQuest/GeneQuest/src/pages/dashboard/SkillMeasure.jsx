@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { 
   Baby, 
@@ -12,6 +12,8 @@ import {
   Target,
   Medal
 } from 'lucide-react';
+import { doc, getDoc, updateDoc } from 'firebase/firestore';
+import { db, auth } from '../../config/firebase'; // Adjust the path to your Firebase config
 
 const levels = [
   {
@@ -65,10 +67,60 @@ const levels = [
 ];
 
 const SkillMeasure = () => {
-  // In a real app, these would come from a backend
-  const [currentXP, setCurrentXP] = useState(450);
-  const [currentLevel, setCurrentLevel] = useState('gene-explorer');
-  
+  const [currentXP, setCurrentXP] = useState(0);
+  const [currentLevel, setCurrentLevel] = useState('noobie');
+  const [user, setUser] = useState(null);
+
+  // Fetch user data on component mount
+  useEffect(() => {
+    const unsubscribe = auth.onAuthStateChanged((user) => {
+      setUser(user);
+      if (user) {
+        fetchUserData(user.uid);
+      }
+    });
+    return () => unsubscribe();
+  }, []);
+
+  // Fetch XP and rank from Firestore
+  const fetchUserData = async (userId) => {
+    const userDoc = await getDoc(doc(db, 'users', userId));
+    if (userDoc.exists()) {
+      const userData = userDoc.data();
+      setCurrentXP(userData.xp || 0);
+      setCurrentLevel(getCurrentRank(userData.xp || 0)); // Calculate rank based on XP
+    }
+  };
+
+  // Calculate rank based on XP
+  const getCurrentRank = (xp) => {
+    for (let i = levels.length - 1; i >= 0; i--) {
+      if (xp >= levels[i].xpRequired) {
+        return levels[i].id;
+      }
+    }
+    return 'noobie'; // Default rank
+  };
+
+  // Update rank in Firestore if XP changes
+  useEffect(() => {
+    if (user) {
+      const newRank = getCurrentRank(currentXP);
+      if (newRank !== currentLevel) {
+        setCurrentLevel(newRank);
+        updateRankInFirestore(user.uid, newRank);
+      }
+    }
+  }, [currentXP, user]);
+
+  // Update rank in Firestore
+  const updateRankInFirestore = async (userId, rank) => {
+    const userDoc = doc(db, 'users', userId);
+    await updateDoc(userDoc, {
+      rank: rank,
+    });
+  };
+
   const getCurrentLevelIndex = () => {
     return levels.findIndex(level => level.id === currentLevel);
   };

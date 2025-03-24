@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   MessageSquarePlus,
   Users,
@@ -7,7 +7,9 @@ import {
   Plus,
   MessageSquare,
   UserPlus,
-  LogOut,
+  X,
+  MessageCircleMore,
+  Info,
 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import { db } from "../../config/firebase";
@@ -18,16 +20,18 @@ import {
   where,
   orderBy,
   onSnapshot,
-  serverTimestamp,
-  updateDoc,
   doc,
+  updateDoc,
   arrayUnion,
   arrayRemove,
+  serverTimestamp,
 } from "firebase/firestore";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
 const TalkShelf = () => {
   const { user } = useAuth();
   const [rooms, setRooms] = useState([]);
+  const [availableRooms, setAvailableRooms] = useState([]);
   const [selectedRoom, setSelectedRoom] = useState(null);
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState("");
@@ -38,41 +42,169 @@ const TalkShelf = () => {
     topic: "",
   });
   const [error, setError] = useState(null);
+  const [activeTab, setActiveTab] = useState("joined");
+  const [isTyping, setIsTyping] = useState(false);
+  const [factChecks, setFactChecks] = useState([]); // Store fact-check results
+  const [visibleFactChecks, setVisibleFactChecks] = useState({}); // Track visibility of fact-checks
   const messagesEndRef = useRef(null);
   const [loading, setLoading] = useState(true);
 
-  // Scroll to bottom of messages
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  // Gemini AI setup
+  const genAI = new GoogleGenerativeAI("AIzaSyD8MOM0pxVrdRpw5sKeC0pgJRCZXtPGWbY");
+  const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+
+  // Trigger keywords for fact-checking
+  const triggerKeywords = new Set([
+    "gene",
+    "bioinformatics",
+    "DNA",
+    "RNA",
+    "genome",
+    "mutation",
+    "protein",
+    "sequence",
+  ]);
+
+  // Check if a message contains trigger keywords
+  const containsTriggerKeywords = (message) => {
+    const words = message.toLowerCase().split(/\s+/);
+    return words.some((word) => triggerKeywords.has(word));
   };
 
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
+  // Fact-check a message using Gemini
+  const factCheckMessage = async (message) => {
+    try {
+      const prompt = `You are a fact-checking assistant. Analyze the following message and provide a fact-checked response. If the message contains accurate information, confirm it. If it contains inaccuracies, correct them. Respond concisely and clearly: "${message}"`;
+      const result = await model.generateContent(prompt);
+      const response = await result.response;
+      const factCheckResponse = await response.text();
+      return factCheckResponse;
+    } catch (error) {
+      console.error("Error fetching fact-check response:", error);
+      return "Unable to fact-check this message. Please try again later.";
+    }
+  };
 
-  // Fetch all rooms
-  useEffect(() => {
-    if (!user) return;
+  // Store fact-check result in Firestore
+  const storeFactCheck = async (roomId, message, factCheckResponse) => {
+    try {
+      await addDoc(collection(db, `chatRooms/${roomId}/factChecks`), {
+        originalMessage: message,
+        factCheckResponse: factCheckResponse,
+        timestamp: serverTimestamp(),
+      });
+    } catch (error) {
+      console.error("Error storing fact-check result:", error);
+    }
+  };
 
-    const roomsQuery = query(
-      collection(db, "chatRooms"),
-      orderBy("createdAt", "desc")
+  // Send message and trigger fact-checking if keywords are found
+  const sendMessage = async (e) => {
+    e.preventDefault();
+    if (!user || !selectedRoom || !newMessage.trim()) return;
+
+    try {
+      // Send the user's message
+      const messageRef = await addDoc(collection(db, `chatRooms/${selectedRoom.id}/messages`), {
+        content: newMessage,
+        sender: user.uid,
+        senderName: user.displayName || "Anonymous",
+        timestamp: serverTimestamp(),
+      });
+
+      // Check for trigger keywords and fact-check the message
+      if (containsTriggerKeywords(newMessage)) {
+        setIsTyping(true);
+        const factCheckResponse = await factCheckMessage(newMessage);
+        if (factCheckResponse) {
+          await storeFactCheck(selectedRoom.id, newMessage, factCheckResponse);
+          setFactChecks((prev) => [
+            ...prev,
+            { id: messageRef.id, originalMessage: newMessage, factCheckResponse: factCheckResponse },
+          ]);
+        }
+        setIsTyping(false);
+      }
+
+      setNewMessage("");
+    } catch (err) {
+      console.error("Error sending message:", err);
+      setError("Failed to send message");
+    }
+  };
+
+  // Fetch fact-checks for the selected room
+  useEffect(() => {
+    if (!selectedRoom) return;
+
+    const factChecksQuery = query(
+      collection(db, `chatRooms/${selectedRoom.id}/factChecks`),
+      orderBy("timestamp", "asc")
     );
 
-    const unsubscribe = onSnapshot(roomsQuery, (snapshot) => {
-      const roomsData = snapshot.docs.map((doc) => ({
+    const unsubscribe = onSnapshot(factChecksQuery, (snapshot) => {
+      const checks = snapshot.docs.map((doc) => ({
         id: doc.id,
         ...doc.data(),
-        members: doc.data().members || [],
       }));
-      setRooms(roomsData);
-      setLoading(false);
+      setFactChecks(checks);
     });
 
     return () => unsubscribe();
+  }, [selectedRoom]);
+
+  // Scroll to bottom when messages or fact-checks change
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages, factChecks]);
+
+  // Toggle visibility of a fact-check
+  const toggleFactCheckVisibility = (id) => {
+    setVisibleFactChecks((prev) => ({
+      ...prev,
+      [id]: !prev[id], // Toggle visibility for the specific fact-check
+    }));
+  };
+
+  // Fetch joined and available rooms
+  useEffect(() => {
+    if (!user) return;
+
+    const joinedRoomsQuery = query(
+      collection(db, "chatRooms"),
+      where("members", "array-contains", user.uid)
+    );
+
+    const allRoomsQuery = query(collection(db, "chatRooms"));
+
+    const unsubscribeJoined = onSnapshot(joinedRoomsQuery, (snapshot) => {
+      const joinedRoomsData = snapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+      setRooms(joinedRoomsData);
+    });
+
+    const unsubscribeAll = onSnapshot(allRoomsQuery, (snapshot) => {
+      const allRoomsData = snapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+
+      const availableRoomsData = allRoomsData.filter(
+        (room) => !room.members.includes(user.uid)
+      );
+      setAvailableRooms(availableRoomsData);
+      setLoading(false);
+    });
+
+    return () => {
+      unsubscribeJoined();
+      unsubscribeAll();
+    };
   }, [user]);
 
-  // Listen for messages in selected room
+  // Fetch messages for the selected room
   useEffect(() => {
     if (!selectedRoom) return;
 
@@ -92,6 +224,7 @@ const TalkShelf = () => {
     return () => unsubscribe();
   }, [selectedRoom]);
 
+  // Create a new room
   const createRoom = async () => {
     if (!user) return;
 
@@ -120,6 +253,7 @@ const TalkShelf = () => {
     }
   };
 
+  // Join a room
   const joinRoom = async (roomId) => {
     if (!user) return;
 
@@ -129,19 +263,13 @@ const TalkShelf = () => {
         members: arrayUnion(user.uid),
         memberCount: (selectedRoom.memberCount || 0) + 1,
       });
-
-      // Update the selected room with the new member
-      setSelectedRoom((prev) => ({
-        ...prev,
-        members: [...prev.members, user.uid],
-        memberCount: (prev.memberCount || 0) + 1,
-      }));
     } catch (err) {
       console.error("Error joining room:", err);
       setError("Failed to join room");
     }
   };
 
+  // Leave a room
   const leaveRoom = async (roomId) => {
     if (!user) return;
 
@@ -152,45 +280,11 @@ const TalkShelf = () => {
         memberCount: Math.max(0, (selectedRoom.memberCount || 1) - 1),
       });
 
-      // Update the selected room without the member
-      setSelectedRoom((prev) => ({
-        ...prev,
-        members: prev.members.filter((id) => id !== user.uid),
-        memberCount: Math.max(0, (prev.memberCount || 1) - 1),
-      }));
+      setSelectedRoom(null);
     } catch (err) {
       console.error("Error leaving room:", err);
       setError("Failed to leave room");
     }
-  };
-
-  const sendMessage = async (e) => {
-    e.preventDefault();
-    if (!user || !selectedRoom || !newMessage.trim()) return;
-
-    // Check if user is a member of the room
-    if (!selectedRoom.members.includes(user.uid)) {
-      setError("You must join the room before sending messages");
-      return;
-    }
-
-    try {
-      await addDoc(collection(db, `chatRooms/${selectedRoom.id}/messages`), {
-        content: newMessage,
-        sender: user.uid,
-        senderName: user.displayName || "Anonymous",
-        timestamp: serverTimestamp(),
-      });
-
-      setNewMessage("");
-    } catch (err) {
-      console.error("Error sending message:", err);
-      setError("Failed to send message");
-    }
-  };
-
-  const isUserMember = (room) => {
-    return room.members.includes(user?.uid);
   };
 
   if (loading) {
@@ -207,7 +301,7 @@ const TalkShelf = () => {
         {/* Sidebar */}
         <div className="w-80 bg-navy-900 border-r border-indigo-500/20 p-4">
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl font-bold">Chat Rooms</h2>
+            <h2 className="text-xl font-bold">Communities</h2>
             <button
               onClick={() => setShowCreateRoom(true)}
               className="p-2 hover:bg-navy-800 rounded-full transition-colors"
@@ -216,93 +310,85 @@ const TalkShelf = () => {
             </button>
           </div>
 
-          {/* Room List */}
+          <div className="flex mb-4 bg-navy-800 rounded-lg p-1">
+            <button
+              onClick={() => setActiveTab("joined")}
+              className={`flex-1 py-2 rounded-md transition-colors ${
+                activeTab === "joined"
+                  ? "bg-indigo-600 text-white"
+                  : "text-gray-400 hover:text-white"
+              }`}
+            >
+              Joined
+            </button>
+            <button
+              onClick={() => setActiveTab("available")}
+              className={`flex-1 py-2 rounded-md transition-colors ${
+                activeTab === "available"
+                  ? "bg-indigo-600 text-white"
+                  : "text-gray-400 hover:text-white"
+              }`}
+            >
+              Available
+            </button>
+          </div>
+
           <div className="space-y-2">
-            {rooms.map((room) => (
-              <button
-                key={room.id}
-                onClick={() => setSelectedRoom(room)}
-                className={`w-full p-3 rounded-lg text-left transition-colors ${
-                  selectedRoom?.id === room.id
-                    ? "bg-indigo-600/20 border border-indigo-500/20"
-                    : "hover:bg-navy-800"
-                }`}
-              >
-                <div className="flex items-center space-x-3">
-                  <MessageSquare className="h-5 w-5 text-indigo-400" />
-                  <div className="flex-1">
-                    <h3 className="font-medium">{room.name}</h3>
-                    <p className="text-sm text-gray-400">{room.topic}</p>
+            {activeTab === "joined"
+              ? rooms.map((room) => (
+                  <button
+                    key={room.id}
+                    onClick={() => setSelectedRoom(room)}
+                    className={`w-full p-3 rounded-lg text-left transition-colors ${
+                      selectedRoom?.id === room.id
+                        ? "bg-indigo-600/20 border border-indigo-500/20"
+                        : "hover:bg-navy-800"
+                    }`}
+                  >
+                    <div className="flex items-center space-x-3">
+                      <MessageSquare className="h-5 w-5 text-indigo-400" />
+                      <div>
+                        <h3 className="font-medium">{room.name}</h3>
+                        <p className="text-sm text-gray-400">{room.topic}</p>
+                      </div>
+                    </div>
+                  </button>
+                ))
+              : availableRooms.map((room) => (
+                  <div
+                    key={room.id}
+                    className="w-full p-3 rounded-lg text-left transition-colors hover:bg-navy-800 border border-indigo-500/20"
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-3">
+                        <MessageSquare className="h-5 w-5 text-indigo-400" />
+                        <div>
+                          <h3 className="font-medium">{room.name}</h3>
+                          <p className="text-sm text-gray-400">{room.topic}</p>
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => joinRoom(room.id)}
+                        className="p-2 hover:bg-indigo-600/20 rounded-full transition-colors"
+                      >
+                        <UserPlus className="h-5 w-5 text-indigo-400" />
+                      </button>
+                    </div>
                   </div>
-                  {isUserMember(room) && (
-                    <span className="text-xs bg-indigo-500/20 text-indigo-400 px-2 py-1 rounded-full">
-                      Joined
-                    </span>
-                  )}
-                </div>
-              </button>
-            ))}
+                ))}
           </div>
         </div>
 
-        {/* Main Chat Area */}
+        {/* Main chat area */}
         <div className="flex-1 flex flex-col">
           {selectedRoom ? (
             <>
-              {/* Room Header */}
-              <div className="bg-navy-900 border-b border-indigo-500/20 p-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h2 className="text-xl font-bold">{selectedRoom.name}</h2>
-                    <p className="text-sm text-gray-400">{selectedRoom.topic}</p>
-                  </div>
-                  <div className="flex items-center space-x-4">
-                    <div className="flex items-center space-x-2">
-                      <Users className="h-5 w-5 text-indigo-400" />
-                      <span>{selectedRoom.memberCount || 0} members</span>
-                    </div>
-                    {!isUserMember(selectedRoom) ? (
-                      <button
-                        onClick={() => joinRoom(selectedRoom.id)}
-                        className="flex items-center space-x-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
-                      >
-                        <UserPlus className="h-4 w-4" />
-                        <span>Join Room</span>
-                      </button>
-                    ) : (
-                      <button
-                        onClick={() => leaveRoom(selectedRoom.id)}
-                        className="flex items-center space-x-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
-                      >
-                        <LogOut className="h-4 w-4" />
-                        <span>Leave</span>
-                      </button>
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              {/* Messages */}
-              <div className="flex-1 overflow-y-auto p-4 space-y-4">
-                {!isUserMember(selectedRoom) ? (
-                  <div className="flex items-center justify-center h-full">
-                    <div className="text-center">
-                      <UserPlus className="h-16 w-16 text-indigo-400 mx-auto mb-4" />
-                      <h2 className="text-xl font-bold mb-2">Join to Chat</h2>
-                      <p className="text-gray-400 mb-4">
-                        You need to join this room to send and view messages
-                      </p>
-                      <button
-                        onClick={() => joinRoom(selectedRoom.id)}
-                        className="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
-                      >
-                        Join Room
-                      </button>
-                    </div>
-                  </div>
-                ) : (
-                  <>
-                    {messages.map((message) => (
+              {/* Chat messages */}
+              <div className="flex-1 overflow-y-auto p-4" style={{ maxHeight: "calc(100vh - 12rem)" }}>
+                <div className="space-y-4">
+                  {messages.map((message) => {
+                    const factCheck = factChecks.find((fc) => fc.originalMessage === message.content);
+                    return (
                       <div
                         key={message.id}
                         className={`flex ${
@@ -330,40 +416,59 @@ const TalkShelf = () => {
                                 minute: "2-digit",
                               })}
                             </span>
+                            {factCheck && (
+                              <button
+                                onClick={() => toggleFactCheckVisibility(message.id)}
+                                className="p-1 hover:bg-indigo-600/20 rounded-full transition-colors"
+                              >
+                                <Info className="h-4 w-4 text-indigo-400" />
+                              </button>
+                            )}
                           </div>
                           <p>{message.content}</p>
+                          {factCheck && visibleFactChecks[message.id] && (
+                            <div className="mt-2 p-3 bg-navy-700 rounded-lg">
+                              <span className="font-medium">Fact-Check:</span>{" "}
+                              {factCheck.factCheckResponse}
+                            </div>
+                          )}
                         </div>
                       </div>
-                    ))}
-                    <div ref={messagesEndRef} />
-                  </>
-                )}
+                    );
+                  })}
+
+                  {isTyping && (
+                    <div className="mb-4 bg-indigo-500/10 rounded-lg p-3">
+                      <MessageCircleMore className="text-white" />
+                    </div>
+                  )}
+
+                  <div ref={messagesEndRef} />
+                </div>
               </div>
 
-              {/* Message Input */}
-              {isUserMember(selectedRoom) && (
-                <form
-                  onSubmit={sendMessage}
-                  className="p-4 bg-navy-900 border-t border-indigo-500/20"
-                >
-                  <div className="flex space-x-4">
-                    <input
-                      type="text"
-                      value={newMessage}
-                      onChange={(e) => setNewMessage(e.target.value)}
-                      placeholder="Type your message..."
-                      className="flex-1 bg-navy-800 border border-indigo-500/20 rounded-lg px-4 py-2 text-white placeholder-gray-500 focus:outline-none focus:border-indigo-500"
-                    />
-                    <button
-                      type="submit"
-                      disabled={!newMessage.trim()}
-                      className="p-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      <Send className="h-5 w-5" />
-                    </button>
-                  </div>
-                </form>
-              )}
+              {/* Message input */}
+              <form
+                onSubmit={sendMessage}
+                className="p-4 bg-navy-900 border-t border-indigo-500/20"
+              >
+                <div className="flex space-x-4">
+                  <input
+                    type="text"
+                    value={newMessage}
+                    onChange={(e) => setNewMessage(e.target.value)}
+                    placeholder="Type your message..."
+                    className="flex-1 bg-navy-800 border border-indigo-500/20 rounded-lg px-4 py-2 text-white placeholder-gray-500 focus:outline-none focus:border-indigo-500"
+                  />
+                  <button
+                    type="submit"
+                    disabled={!newMessage.trim()}
+                    className="p-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <Send className="h-5 w-5" />
+                  </button>
+                </div>
+              </form>
             </>
           ) : (
             <div className="flex-1 flex items-center justify-center">
@@ -385,7 +490,7 @@ const TalkShelf = () => {
           <motion.div
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            className="bg-gray-800 rounded-xl p-6 w-full max-w-md"
+            className="bg-navy-900 rounded-xl p-6 w-full max-w-md"
           >
             <h2 className="text-2xl font-bold mb-6">Create New Room</h2>
             <div className="space-y-4">
@@ -451,13 +556,6 @@ const TalkShelf = () => {
               </button>
             </div>
           </motion.div>
-        </div>
-      )}
-
-      {/* Error Message */}
-      {error && (
-        <div className="fixed bottom-4 right-4 bg-red-500 text-white px-4 py-2 rounded-lg shadow-lg">
-          {error}
         </div>
       )}
     </div>
