@@ -140,43 +140,43 @@ const SkillMeasure = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-900 p-8">
+    <div className="min-h-screen bg-gray-900 p-4 sm:p-8">
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         className="max-w-4xl mx-auto"
       >
         {/* Header */}
-        <div className="flex items-center gap-3 mb-8">
-          <Medal className="w-8 h-8 text-yellow-400" />
-          <h1 className="text-3xl font-bold text-white">Skill Progress</h1>
+        <div className="flex items-center gap-3 mb-6 sm:mb-8">
+          <Medal className="w-6 h-6 sm:w-8 sm:h-8 text-yellow-400" />
+          <h1 className="text-2xl sm:text-3xl font-bold text-white">Skill Progress</h1>
         </div>
 
         {/* Current Level Card */}
-        <div className="bg-gray-800 rounded-lg p-6 mb-8">
-          <div className="flex items-center justify-between mb-4">
+        <div className="bg-gray-800 rounded-lg p-4 sm:p-6 mb-6 sm:mb-8">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 gap-4">
             <div className="flex items-center gap-3">
               <motion.div
                 whileHover={{ scale: 1.1 }}
-                className={`p-3 rounded-lg bg-gradient-to-br ${levels[getCurrentLevelIndex()].color}`}
+                className={`p-2 sm:p-3 rounded-lg bg-gradient-to-br ${levels[getCurrentLevelIndex()].color}`}
               >
-                {React.createElement(levels[getCurrentLevelIndex()].icon, { className: "w-8 h-8 text-white" })}
+                {React.createElement(levels[getCurrentLevelIndex()].icon, { className: "w-6 h-6 sm:w-8 sm:h-8 text-white" })}
               </motion.div>
               <div>
-                <h2 className="text-2xl font-bold text-white">
+                <h2 className="text-xl sm:text-2xl font-bold text-white">
                   {levels[getCurrentLevelIndex()].title}
                 </h2>
-                <p className="text-gray-400">Current Level</p>
+                <p className="text-sm sm:text-base text-gray-400">Current Level</p>
               </div>
             </div>
-            <div className="text-right">
-              <p className="text-xl font-bold text-white">{currentXP} XP</p>
-              <p className="text-gray-400">Total Experience</p>
+            <div className="text-left sm:text-right">
+              <p className="text-lg sm:text-xl font-bold text-white">{currentXP} XP</p>
+              <p className="text-sm sm:text-base text-gray-400">Total Experience</p>
             </div>
           </div>
 
           {/* Progress Bar */}
-          <div className="h-4 bg-gray-700 rounded-full overflow-hidden mb-4">
+          <div className="h-3 sm:h-4 bg-gray-700 rounded-full overflow-hidden mb-4 sm:mb-6">
             <motion.div
               initial={{ width: 0 }}
               animate={{ width: `${getProgressToNextLevel()}%` }}
@@ -186,36 +186,36 @@ const SkillMeasure = () => {
           </div>
 
           {/* Stats */}
-          <div className="grid grid-cols-3 gap-4 mb-6">
-            <div className="bg-gray-700 rounded-lg p-4">
-              <div className="flex items-center gap-2 mb-2">
-                <Target className="w-5 h-5 text-blue-400" />
-                <h3 className="text-white font-semibold">Goals</h3>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mb-4 sm:mb-6">
+            <div className="bg-gray-700 rounded-lg p-3 sm:p-4">
+              <div className="flex items-center gap-2 mb-1 sm:mb-2">
+                <Target className="w-4 h-4 sm:w-5 sm:h-5 text-blue-400" />
+                <h3 className="text-sm sm:text-base text-white font-semibold">Goals</h3>
               </div>
-              <p className="text-2xl font-bold text-white">5/8</p>
-              <p className="text-gray-400 text-sm">Completed</p>
+              <p className="text-xl sm:text-2xl font-bold text-white">5/8</p>
+              <p className="text-xs sm:text-sm text-gray-400">Completed</p>
             </div>
-            <div className="bg-gray-700 rounded-lg p-4">
-              <div className="flex items-center gap-2 mb-2">
-                <Timer className="w-5 h-5 text-green-400" />
-                <h3 className="text-white font-semibold">Time</h3>
+            <div className="bg-gray-700 rounded-lg p-3 sm:p-4">
+              <div className="flex items-center gap-2 mb-1 sm:mb-2">
+                <Timer className="w-4 h-4 sm:w-5 sm:h-5 text-green-400" />
+                <h3 className="text-sm sm:text-base text-white font-semibold">Time</h3>
               </div>
-              <p className="text-2xl font-bold text-white">12h</p>
-              <p className="text-gray-400 text-sm">Learning Time</p>
+              <p className="text-xl sm:text-2xl font-bold text-white">12h</p>
+              <p className="text-xs sm:text-sm text-gray-400">Learning Time</p>
             </div>
-            <div className="bg-gray-700 rounded-lg p-4">
-              <div className="flex items-center gap-2 mb-2">
-                <Star className="w-5 h-5 text-yellow-400" />
-                <h3 className="text-white font-semibold">Achievements</h3>
+            <div className="bg-gray-700 rounded-lg p-3 sm:p-4">
+              <div className="flex items-center gap-2 mb-1 sm:mb-2">
+                <Star className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-400" />
+                <h3 className="text-sm sm:text-base text-white font-semibold">Achievements</h3>
               </div>
-              <p className="text-2xl font-bold text-white">8</p>
-              <p className="text-gray-400 text-sm">Unlocked</p>
+              <p className="text-xl sm:text-2xl font-bold text-white">8</p>
+              <p className="text-xs sm:text-sm text-gray-400">Unlocked</p>
             </div>
           </div>
         </div>
 
         {/* Level Progress */}
-        <div className="grid gap-6">
+        <div className="grid gap-4 sm:gap-6">
           {levels.map((level, index) => {
             const isCurrentLevel = level.id === currentLevel;
             const isPastLevel = index < getCurrentLevelIndex();
@@ -227,28 +227,28 @@ const SkillMeasure = () => {
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: index * 0.1 }}
-                className={`bg-gray-800 rounded-lg p-6 ${
-                  isCurrentLevel ? 'ring-2 ring-blue-500' : ''
+                className={`bg-gray-800 rounded-lg p-4 sm:p-6 ${
+                  isCurrentLevel ? 'ring-1 sm:ring-2 ring-blue-500' : ''
                 }`}
               >
-                <div className="flex items-center gap-4 mb-4">
+                <div className="flex items-center gap-3 sm:gap-4 mb-3 sm:mb-4">
                   <motion.div
                     whileHover={{ scale: 1.1 }}
-                    className={`p-3 rounded-lg bg-gradient-to-br ${level.color} ${
+                    className={`p-2 sm:p-3 rounded-lg bg-gradient-to-br ${level.color} ${
                       isLocked ? 'opacity-50' : ''
                     }`}
                   >
-                    <level.icon className="w-6 h-6 text-white" />
+                    <level.icon className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
                   </motion.div>
                   <div className="flex-1">
-                    <h3 className="text-xl font-bold text-white flex items-center gap-2">
+                    <h3 className="text-lg sm:text-xl font-bold text-white flex items-center gap-2">
                       {level.title}
                       {isPastLevel && (
-                        <CheckCircle2 className="w-5 h-5 text-green-400" />
+                        <CheckCircle2 className="w-4 h-4 sm:w-5 sm:h-5 text-green-400" />
                       )}
-                      {isLocked && <Lock className="w-5 h-5 text-gray-500" />}
+                      {isLocked && <Lock className="w-4 h-4 sm:w-5 sm:h-5 text-gray-500" />}
                     </h3>
-                    <p className="text-gray-400">
+                    <p className="text-xs sm:text-sm text-gray-400">
                       {isLocked
                         ? `Unlock at ${level.xpRequired} XP`
                         : `${level.xpRequired} XP Required`}
@@ -256,11 +256,11 @@ const SkillMeasure = () => {
                   </div>
                 </div>
 
-                <div className="space-y-2">
+                <div className="space-y-1 sm:space-y-2">
                   {level.requirements.map((req, reqIndex) => (
                     <div
                       key={reqIndex}
-                      className="flex items-center gap-2 text-gray-300"
+                      className="flex items-center gap-2 text-xs sm:text-sm text-gray-300"
                     >
                       <div
                         className={`w-1.5 h-1.5 rounded-full ${
