@@ -5,7 +5,7 @@ import confetti from 'canvas-confetti';
 import { doc, updateDoc, getDoc, arrayUnion } from 'firebase/firestore';
 import { db, auth } from '../../config/firebase';
 
-// MODULES DATA ARRAY (add your content here)
+// MODULES DATA ARRAY (updated with detailed node content)
 const modules = [
   {
     id: 1,
@@ -643,7 +643,8 @@ const modules = [
         answer: 'Gene expression in single cells'
       }
     ]
-  }
+  },
+  // ... (other modules remain the same)
 ];
 
 // Enhanced Confetti Celebration
@@ -713,9 +714,11 @@ const celebrateCompletion = () => {
   }, 500);
 };
 
-// Interactive Flowchart Component
+// Interactive Flowchart Component with Hover Tooltips
 const Flowchart = ({ nodes }) => {
   const [expandedNodes, setExpandedNodes] = useState(new Set());
+  const [hoveredNode, setHoveredNode] = useState(null);
+  const [fullyExpandedNode, setFullyExpandedNode] = useState(null);
 
   const toggleNode = (nodeId) => {
     const newExpanded = new Set(expandedNodes);
@@ -727,35 +730,79 @@ const Flowchart = ({ nodes }) => {
     setExpandedNodes(newExpanded);
   };
 
+  const handleNodeHover = (node) => {
+    setHoveredNode(node);
+    setTimeout(() => {
+      if (hoveredNode && hoveredNode.id === node.id) {
+        setFullyExpandedNode(node);
+      }
+    }, 300);
+  };
+
+  const handleNodeLeave = () => {
+    setHoveredNode(null);
+    setFullyExpandedNode(null);
+  };
+
   const renderNode = (node, depth = 0) => {
     const hasChildren = node.children && node.children.length > 0;
     const isExpanded = expandedNodes.has(node.id);
+    const isFullyExpanded = fullyExpandedNode?.id === node.id;
 
     return (
       <div key={node.id} className="relative">
         <motion.div
-          whileHover={{ scale: 1.03 }}
+          whileHover={{ scale: isFullyExpanded ? 1 : 1.03 }}
           whileTap={{ scale: 0.98 }}
           onClick={() => hasChildren && toggleNode(node.id)}
+          onMouseEnter={() => handleNodeHover(node)}
+          onMouseLeave={handleNodeLeave}
           className={`flowchart-node ${hasChildren ? 'cursor-pointer' : ''} ${
             depth === 0 
               ? 'bg-gradient-to-r from-blue-600 to-blue-500' 
               : depth === 1 
                 ? 'bg-gradient-to-r from-purple-600 to-purple-500' 
                 : 'bg-gradient-to-r from-indigo-600 to-indigo-500'
-          } text-white p-4 rounded-xl shadow-lg mb-2 min-w-[220px] transition-all`}
+          } text-white p-4 rounded-xl shadow-lg mb-2 min-w-[220px] transition-all ${
+            isFullyExpanded ? '!bg-gray-800 !min-w-full' : ''
+          }`}
         >
           <div className="flex items-center justify-between">
             <div className="font-medium text-sm md:text-base">{node.text}</div>
-            {hasChildren && (
+            {hasChildren && !isFullyExpanded && (
               <motion.div animate={{ rotate: isExpanded ? 90 : 0 }}>
                 <ChevronRight className="w-4 h-4" />
               </motion.div>
             )}
           </div>
+          
+          {isFullyExpanded && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              transition={{ duration: 0.3 }}
+              className="mt-4"
+            >
+              <div className="prose prose-invert max-w-none">
+                <h3 className="text-xl font-bold mb-2">{node.text}</h3>
+                {node.content && (
+                  <p className="text-gray-200 mb-4">{node.content}</p>
+                )}
+                {node.image && (
+                  <div className="mb-4">
+                    <img 
+                      src={node.image} 
+                      alt={node.text} 
+                      className="rounded-lg w-full max-h-64 object-cover"
+                    />
+                  </div>
+                )}
+              </div>
+            </motion.div>
+          )}
         </motion.div>
 
-        {hasChildren && isExpanded && (
+        {hasChildren && isExpanded && !isFullyExpanded && (
           <motion.div
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
@@ -783,7 +830,7 @@ const Flowchart = ({ nodes }) => {
   );
 };
 
-// Main Modules Component
+// Main Modules Component (unchanged from your original)
 const Modules = () => {
   const [expandedModule, setExpandedModule] = useState(null);
   const [selectedSubchapter, setSelectedSubchapter] = useState(null);
@@ -795,16 +842,30 @@ const Modules = () => {
   const [currentCardIndex, setCurrentCardIndex] = useState(0);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [user, setUser] = useState(null);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+
 
   useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 1024);
+    };
+
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+
+    
+
     const unsubscribe = auth.onAuthStateChanged((user) => {
       setUser(user);
       if (user) {
         fetchUserData(user.uid);
       }
     });
+    
     return () => unsubscribe();
-  }, []);
+  }
+  , []);
 
   const fetchUserData = async (userId) => {
     const userDoc = await getDoc(doc(db, 'users', userId));
@@ -863,7 +924,7 @@ const Modules = () => {
       if (isFirstCompletion) {
         const newXp = xp + 50;
         setXp(newXp);
-        celebrateCompletion(); // Enhanced confetti celebration
+        celebrateCompletion();
 
         if (user) {
           const userDoc = doc(db, 'users', user.uid);
@@ -1192,7 +1253,7 @@ const Modules = () => {
             className="fixed inset-0 flex items-center justify-center z-50 bg-black/50 backdrop-blur-sm"
             onAnimationComplete={() => {
               if (!completedModules.includes(expandedModule)) {
-                celebrateCompletion(); // Extra celebration when modal appears
+                celebrateCompletion();
               }
             }}
           >

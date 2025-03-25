@@ -8,9 +8,11 @@ import {
   MessagesSquare, 
   LogOut, 
   UserCircle,
-  MessageCircle
+  MessageCircle,
+  Menu,
+  X
 } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import Chatbot from '../Chatbot';
 import { useAuth } from '../../context/AuthContext';
 
@@ -18,6 +20,7 @@ const DashboardLayout = () => {
   const navigate = useNavigate();
   const { logout } = useAuth();
   const [isChatOpen, setIsChatOpen] = React.useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
 
   const navItems = [
     { path: 'visualize', icon: Dna, label: 'Visualize' },
@@ -32,36 +35,78 @@ const DashboardLayout = () => {
     navigate('/login');
   };
 
+  const closeMobileMenu = () => {
+    setIsMobileMenuOpen(false);
+  };
+
+  const Sidebar = ({ isMobile = false }) => (
+    <nav className="mt-6">
+      {navItems.map(({ path, icon: Icon, label }) => (
+        <NavLink
+          key={path}
+          to={path}
+          onClick={isMobile ? closeMobileMenu : undefined}
+          className={({ isActive }) =>
+            `flex items-center px-6 py-3 text-sm font-medium transition-colors ${
+              isActive
+                ? 'bg-indigo-600/20 border-r-4 border-indigo-500 text-indigo-400'
+                : 'text-gray-400 hover:bg-navy-800 hover:text-white'
+            }`
+          }
+        >
+          <Icon className="h-5 w-5 mr-3" />
+          {label}
+        </NavLink>
+      ))}
+    </nav>
+  );
+
   return (
     <div className="flex h-screen bg-cyan-900 text-white">
-      {/* Sidebar */}
+      {/* Desktop Sidebar */}
       <motion.div 
         initial={{ x: -100, opacity: 0 }}
         animate={{ x: 0, opacity: 1 }}
-        className="w-64 bg-blue-950 border-r border-indigo-500/20"
+        className="hidden md:block w-64 bg-blue-950 border-r border-indigo-500/20"
       >
         <div className="p-6">
           <h1 className="text-2xl font-bold text-indigo-400">GeneQuest</h1>
         </div>
-        <nav className="mt-6">
-          {navItems.map(({ path, icon: Icon, label }) => (
-            <NavLink
-              key={path}
-              to={path}
-              className={({ isActive }) =>
-                `flex items-center px-6 py-3 text-sm font-medium transition-colors ${
-                  isActive
-                    ? 'bg-indigo-600/20 border-r-4 border-indigo-500 text-indigo-400'
-                    : 'text-gray-400 hover:bg-navy-800 hover:text-white'
-                }`
-              }
-            >
-              <Icon className="h-5 w-5 mr-3" />
-              {label}
-            </NavLink>
-          ))}
-        </nav>
+        <Sidebar />
       </motion.div>
+
+      {/* Mobile Menu Button */}
+      <button
+        onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+        className="md:hidden fixed top-4 left-4 z-50 p-2 bg-blue-950 rounded-lg"
+      >
+        {isMobileMenuOpen ? (
+          <X className="h-6 w-6 text-white" />
+        ) : (
+          <Menu className="h-6 w-6 text-white" />
+        )}
+      </button>
+
+      {/* Mobile Sidebar */}
+      <AnimatePresence>
+        {isMobileMenuOpen && (
+          <motion.div
+            initial={{ x: '-100%' }}
+            animate={{ x: 0 }}
+            exit={{ x: '-100%' }}
+            transition={{ type: 'tween' }}
+            className="fixed inset-0 z-40 md:hidden"
+          >
+            <div className="absolute inset-0 bg-black/50" onClick={closeMobileMenu} />
+            <div className="absolute inset-y-0 left-0 w-64 bg-blue-950 border-r border-indigo-500/20">
+              <div className="p-6">
+                <h1 className="text-2xl font-bold text-indigo-400">GeneQuest</h1>
+              </div>
+              <Sidebar isMobile={true} />
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Main content */}
       <div className="flex-1 flex flex-col overflow-hidden">
@@ -98,13 +143,17 @@ const DashboardLayout = () => {
         </motion.div>
 
         {/* Page content */}
-        <div className=" bg-gray-800 flex-1 overflow-auto p-6">
+        <div className="bg-gray-800 flex-1 overflow-auto p-4 md:p-6">
           <Outlet />
         </div>
       </div>
 
       {/* Chatbot */}
-      {isChatOpen && <Chatbot onClose={() => setIsChatOpen(false)} />}
+      {isChatOpen && (
+        <div className="fixed bottom-4 right-4 z-50">
+          <Chatbot onClose={() => setIsChatOpen(false)} />
+        </div>
+      )}
     </div>
   );
 };
