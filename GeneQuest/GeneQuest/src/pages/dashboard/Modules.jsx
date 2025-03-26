@@ -745,7 +745,7 @@ const Flowchart = ({ nodes }) => {
     try {
       const prompt = `You are a bioinformatics expert assistant. Provide a concise yet comprehensive explanation (2-3 paragraphs) about: ${node.text}. 
       Focus on its relevance in bioinformatics and genetics. Use simple language but include key technical details. 
-      If this is part of a larger concept (like ${node.parentText || 'general genetics'}), explain how it relates. make it interesting and explain ity in points`;
+      If this is part of a larger concept (like ${node.parentText || 'general genetics'}), explain how it relates. make it interesting and explain ity in points. avoid ** to induce bold characters`;
       
       const result = await model.generateContent(prompt);
       const response = await result.response;
