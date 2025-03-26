@@ -4,8 +4,13 @@ import { Book, Dna, FileText, ChevronDown, ChevronRight, ChevronLeft, Award, Spa
 import confetti from 'canvas-confetti';
 import { doc, updateDoc, getDoc, arrayUnion } from 'firebase/firestore';
 import { db, auth } from '../../config/firebase';
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
-// MODULES DATA ARRAY (updated with detailed node content)
+// Initialize Gemini AI
+const genAI = new GoogleGenerativeAI('AIzaSyD8MOM0pxVrdRpw5sKeC0pgJRCZXtPGWbY');
+const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+
+// MODULES DATA ARRAY
 const modules = [
   {
     id: 1,
@@ -643,7 +648,7 @@ const modules = [
         answer: 'Gene expression in single cells'
       }
     ]
-  },
+  }
   // ... (other modules remain the same)
 ];
 
@@ -714,11 +719,13 @@ const celebrateCompletion = () => {
   }, 500);
 };
 
-// Interactive Flowchart Component with Hover Tooltips
+// Interactive Flowchart Component with Gemini Integration
 const Flowchart = ({ nodes }) => {
   const [expandedNodes, setExpandedNodes] = useState(new Set());
   const [hoveredNode, setHoveredNode] = useState(null);
   const [fullyExpandedNode, setFullyExpandedNode] = useState(null);
+  const [nodeDescription, setNodeDescription] = useState('');
+  const [isLoadingDescription, setIsLoadingDescription] = useState(false);
 
   const toggleNode = (nodeId) => {
     const newExpanded = new Set(expandedNodes);
@@ -728,6 +735,29 @@ const Flowchart = ({ nodes }) => {
       newExpanded.add(nodeId);
     }
     setExpandedNodes(newExpanded);
+  };
+
+  const handleNodeClick = async (node) => {
+    setFullyExpandedNode(node);
+    setIsLoadingDescription(true);
+    setNodeDescription('');
+    
+    try {
+      const prompt = `You are a bioinformatics expert assistant. Provide a concise yet comprehensive explanation (2-3 paragraphs) about: ${node.text}. 
+      Focus on its relevance in bioinformatics and genetics. Use simple language but include key technical details. 
+      If this is part of a larger concept (like ${node.parentText || 'general genetics'}), explain how it relates. make it interesting and explain ity in points`;
+      
+      const result = await model.generateContent(prompt);
+      const response = await result.response;
+      const text = await response.text();
+      
+      setNodeDescription(text);
+    } catch (error) {
+      console.error("Error fetching from Gemini API:", error);
+      setNodeDescription("Couldn't fetch additional information. Please try again later.");
+    } finally {
+      setIsLoadingDescription(false);
+    }
   };
 
   const handleNodeHover = (node) => {
@@ -744,7 +774,7 @@ const Flowchart = ({ nodes }) => {
     setFullyExpandedNode(null);
   };
 
-  const renderNode = (node, depth = 0) => {
+  const renderNode = (node, depth = 0, parentNode = null) => {
     const hasChildren = node.children && node.children.length > 0;
     const isExpanded = expandedNodes.has(node.id);
     const isFullyExpanded = fullyExpandedNode?.id === node.id;
@@ -754,7 +784,7 @@ const Flowchart = ({ nodes }) => {
         <motion.div
           whileHover={{ scale: isFullyExpanded ? 1 : 1.03 }}
           whileTap={{ scale: 0.98 }}
-          onClick={() => hasChildren && toggleNode(node.id)}
+          onClick={() => handleNodeClick({ ...node, parentText: parentNode?.text })}
           onMouseEnter={() => handleNodeHover(node)}
           onMouseLeave={handleNodeLeave}
           className={`flowchart-node ${hasChildren ? 'cursor-pointer' : ''} ${
@@ -788,8 +818,29 @@ const Flowchart = ({ nodes }) => {
                 {node.content && (
                   <p className="text-gray-200 mb-4">{node.content}</p>
                 )}
+                
+                {/* Gemini AI Description */}
+                <div className="mt-4 p-4 bg-gray-700/50 rounded-lg border border-gray-600/30">
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className="w-6 h-6 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center">
+                      <Sparkles className="w-3 h-3 text-white" />
+                    </div>
+                    <h4 className="font-medium text-blue-300">Explanation</h4>
+                  </div>
+                  
+                  {isLoadingDescription ? (
+                    <div className="space-y-2">
+                      <div className="h-4 bg-gray-600/50 rounded animate-pulse"></div>
+                      <div className="h-4 bg-gray-600/50 rounded animate-pulse w-3/4"></div>
+                      <div className="h-4 bg-gray-600/50 rounded animate-pulse w-2/3"></div>
+                    </div>
+                  ) : (
+                    <p className="text-gray-200 whitespace-pre-wrap">{nodeDescription || "Click to generate an AI-powered explanation of this concept."}</p>
+                  )}
+                </div>
+
                 {node.image && (
-                  <div className="mb-4">
+                  <div className="mb-4 mt-4">
                     <img 
                       src={node.image} 
                       alt={node.text} 
@@ -811,7 +862,7 @@ const Flowchart = ({ nodes }) => {
           >
             {node.children.map(childId => {
               const childNode = nodes.find(n => n.id === childId);
-              return childNode ? renderNode(childNode, depth + 1) : null;
+              return childNode ? renderNode(childNode, depth + 1, node) : null;
             })}
           </motion.div>
         )}
@@ -830,7 +881,7 @@ const Flowchart = ({ nodes }) => {
   );
 };
 
-// Main Modules Component (unchanged from your original)
+// Main Modules Component
 const Modules = () => {
   const [expandedModule, setExpandedModule] = useState(null);
   const [selectedSubchapter, setSelectedSubchapter] = useState(null);
@@ -842,9 +893,7 @@ const Modules = () => {
   const [currentCardIndex, setCurrentCardIndex] = useState(0);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [user, setUser] = useState(null);
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
-
 
   useEffect(() => {
     const checkMobile = () => {
@@ -854,8 +903,6 @@ const Modules = () => {
     checkMobile();
     window.addEventListener('resize', checkMobile);
 
-    
-
     const unsubscribe = auth.onAuthStateChanged((user) => {
       setUser(user);
       if (user) {
@@ -864,8 +911,7 @@ const Modules = () => {
     });
     
     return () => unsubscribe();
-  }
-  , []);
+  }, []);
 
   const fetchUserData = async (userId) => {
     const userDoc = await getDoc(doc(db, 'users', userId));
