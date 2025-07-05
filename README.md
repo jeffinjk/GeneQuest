@@ -1,3 +1,6 @@
+![CI](https://github.com/jeffinjk/GeneQuest/actions/workflows/ci.yml/badge.svg)
+
+
 # 🧠 GeneQuest – A Gamified Learning Experience
 
 **GeneQuest** is a gamified learning platform designed to make studying fun, engaging, and interactive. It brings together quizzes, XP, leaderboards, and real-time chat to create a motivating environment for learners.
