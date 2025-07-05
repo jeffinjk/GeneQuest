@@ -7,7 +7,7 @@
 ## 🌟 Key Features
 
 - 🎮 **Quizzes & XP System**  
-  Users can take quizzes and earn XP based on their performance. A leaderboard showcases top performers.
+  Users can take quizzes and earn XP based on their performance. A leaderboard showcases top performers..
 
 - 🧠 **GeQuefy (Gamified Quiz)**  
   A dedicated module where users can engage in subject-wise quizzes and track their progress.
